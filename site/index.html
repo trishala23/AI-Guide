@@ -326,6 +326,18 @@
     text-transform:uppercase; color:var(--accent-strong); margin-bottom:8px;
   }
   .modal h2{ font-size:1.5rem; padding-right:36px; }
+  .modal-context{
+    font-family:var(--font-mono); font-size:.76rem; color:var(--text-faint);
+    margin-top:6px;
+  }
+  .modal-context b{ color:var(--accent-strong); font-weight:500; }
+
+  .flow-node-num{
+    fill:var(--surface); stroke:var(--accent); stroke-width:1.3;
+  }
+  .flow-node-num-label{
+    font-family:var(--font-mono); font-size:10.5px; fill:var(--accent-strong); text-anchor:middle;
+  }
 
   .flow-figure{ margin:22px 0 0; }
   .flow-figure svg{ display:block; width:100%; height:auto; }
@@ -459,6 +471,7 @@
     <button class="modal-close" id="modalClose" type="button" aria-label="Close">✕</button>
     <p class="modal-eyebrow">Working flow</p>
     <h2 id="modalTitle"></h2>
+    <p class="modal-context" id="modalContext" hidden></p>
     <figure class="flow-figure">
       <div id="modalSvgWrap"></div>
       <figcaption id="modalCaption"></figcaption>
@@ -477,10 +490,50 @@
   /* ---------------- Data ---------------- */
   var DATA = [
     { id:'foundations', title:'Foundations', lede:'Four nested fields, each one a specialization of the last.', terms:[
-      ['Artificial Intelligence (AI)', 'The broad field of building machines that perform tasks normally requiring human intelligence — reasoning, learning, perception, language.'],
-      ['Machine Learning (ML)', 'A subset of AI where systems learn patterns from data instead of following hand-written rules.'],
-      ['Deep Learning (DL)', 'A subset of ML that uses multi-layered neural networks to learn complex, hierarchical patterns.'],
-      ['Generative AI (GenAI)', 'A subset of deep learning focused on generating new content — text, images, audio, code — rather than only making predictions.']
+      { t:'Artificial Intelligence (AI)', d:'The broad field of building machines that perform tasks normally requiring human intelligence — reasoning, learning, perception, language.', flow:{
+        nodes:['Perceive','Reason','Decide','Act'],
+        edges:['interprets input','weighs options','selects best action'],
+        desc:[
+          'Sensors or input data feed the system — text, pixels, signals.',
+          'The system searches or reasons over possible responses.',
+          'It picks the action or output it judges best.',
+          'The system acts — replies, moves, or produces output.'
+        ],
+        loop:'Act feeds back into Perceive as the system observes the result of its own action.'
+      }},
+      { t:'Machine Learning (ML)', d:'A subset of AI where systems learn patterns from data instead of following hand-written rules.', flow:{
+        nodes:['Data in','Pattern learned','Model','Prediction out'],
+        edges:['trains on','becomes','applied to new input'],
+        desc:[
+          'Historical examples, with or without labels.',
+          'The algorithm finds statistical regularities in that data.',
+          'Those regularities are stored as learned parameters.',
+          'Given new, unseen input, the model outputs a prediction.'
+        ],
+        loop:null
+      }},
+      { t:'Deep Learning (DL)', d:'A subset of ML that uses multi-layered neural networks to learn complex, hierarchical patterns.', flow:{
+        nodes:['Raw signal','Low-level features','Mid-level features','High-level concept'],
+        edges:['layer 1 detects','layer 2 combines','deeper layers abstract'],
+        desc:[
+          'Pixels, audio samples, or token IDs enter the first layer.',
+          'Early layers detect edges, simple sounds, or local patterns.',
+          'Middle layers combine those into shapes, phonemes, or phrases.',
+          'Final layers represent whole objects, words, or concepts.'
+        ],
+        loop:null
+      }},
+      { t:'Generative AI (GenAI)', d:'A subset of deep learning focused on generating new content — text, images, audio, code — rather than only making predictions.', flow:{
+        nodes:['Learn distribution','Sample','Condition on prompt','New content'],
+        edges:['from training data','draws from it','steers the sample'],
+        desc:[
+          'The model learns the statistical distribution of its training data.',
+          'Generation starts by sampling from that learned distribution.',
+          'A prompt or condition steers which region of the distribution to sample from.',
+          'The result is new content that fits the learned patterns but never existed before.'
+        ],
+        loop:null
+      }}
     ], flow:{
       nodes:['Artificial Intelligence','Machine Learning','Deep Learning','Generative AI'],
       edges:['narrows to','narrows to','narrows to'],
@@ -493,14 +546,95 @@
       loop:null
     }},
     { id:'machine-learning', title:'Machine Learning', lede:'The paradigms models are trained under, and the vocabulary for judging whether training worked.', terms:[
-      ['Supervised Learning', 'Learns from labeled input–output pairs, e.g. spam detection or price prediction.'],
-      ['Unsupervised Learning', 'Finds structure in unlabeled data, e.g. customer segmentation or clustering.'],
-      ['Reinforcement Learning (RL)', 'Learns by trial and error, guided by rewards and penalties — used in game-playing agents and robotics.'],
-      ['Self-Supervised Learning', 'Generates its own labels from raw data — how most LLMs are pretrained, by predicting the next token.'],
-      ['Features & Labels', 'Features are the inputs a model sees; labels are the correct outputs it is trained to predict.'],
-      ['Overfitting / Underfitting', 'A model that memorizes training data instead of generalizing overfits; one too simple to capture the pattern underfits.'],
-      ['Gradient Descent', 'The optimization algorithm that nudges a model’s parameters to minimize its loss, step by step.'],
-      ['Loss Function', 'The function that measures how far a model’s predictions are from the truth — what gradient descent minimizes.']
+      { t:'Supervised Learning', d:'Learns from labeled input–output pairs, e.g. spam detection or price prediction.', flow:{
+        nodes:['Labeled examples','Model predicts','Compare to label','Adjust'],
+        edges:['fed in pairs','a guess','measures error'],
+        desc:[
+          'Every example comes with the correct answer attached.',
+          'The model guesses an output for each input.',
+          'The guess is checked against the true label.',
+          'The model adjusts to reduce that error next time.'
+        ],
+        loop:'Predict → Compare → Adjust repeats across the whole labeled dataset.'
+      }},
+      { t:'Unsupervised Learning', d:'Finds structure in unlabeled data, e.g. customer segmentation or clustering.', flow:{
+        nodes:['Unlabeled data','Find structure','Group or reduce','Output structure'],
+        edges:['no answers given','measures similarity','clusters or compresses'],
+        desc:[
+          'Examples arrive with no correct-answer labels at all.',
+          'The algorithm looks for similarity or structure on its own.',
+          'Similar points are grouped, or dimensions are compressed.',
+          'The result: clusters, groups, or a simplified representation of the data.'
+        ],
+        loop:null
+      }},
+      { t:'Reinforcement Learning (RL)', d:'Learns by trial and error, guided by rewards and penalties — used in game-playing agents and robotics.', flow:{
+        nodes:['Agent observes state','Takes action','Environment reacts','Receives reward','Updates policy'],
+        edges:['in an environment','changes the state','scores the action','shapes future choices'],
+        desc:[
+          'The agent observes its current situation.',
+          'It chooses an action based on its current strategy.',
+          'The environment responds with a new state.',
+          'The agent receives a reward or penalty for that action.',
+          'The agent updates its strategy to earn more reward next time.'
+        ],
+        loop:'The whole cycle repeats for thousands or millions of steps until the policy converges.'
+      }},
+      { t:'Self-Supervised Learning', d:'Generates its own labels from raw data — how most LLMs are pretrained, by predicting the next token.', flow:{
+        nodes:['Raw unlabeled data','Hide part of it','Predict the hidden part','Compare to real value'],
+        edges:['a chunk is masked','model guesses it','scores the guess'],
+        desc:[
+          'Plain text, images, or audio — no human labels needed.',
+          'Part of the input is deliberately hidden — a word, a patch, a frame.',
+          'The model tries to predict exactly what was hidden.',
+          'The real hidden value becomes the label, for free.'
+        ],
+        loop:'This repeats across billions of examples — how most LLMs are pretrained.'
+      }},
+      { t:'Features & Labels', d:'Features are the inputs a model sees; labels are the correct outputs it is trained to predict.', flow:{
+        nodes:['Raw example','Extract features','Attach label','Training pair'],
+        edges:['measurable properties','the known answer','ready to train on'],
+        desc:[
+          'A single row of raw data — an email, a house, an image.',
+          'Turn it into measurable inputs: word counts, square footage, pixel values.',
+          'Attach the outcome you already know: spam or not, sale price, cat or dog.',
+          'Together, features and label form one training example.'
+        ],
+        loop:null
+      }},
+      { t:'Overfitting / Underfitting', d:'A model that memorizes training data instead of generalizing overfits; one too simple to capture the pattern underfits.', flow:{
+        nodes:['Model complexity','Fits training data','Test on new data','Generalization gap'],
+        edges:['too high or too low','memorizes or misses patterns','reveals the truth'],
+        desc:[
+          'How much capacity the model has to fit patterns.',
+          'Too much complexity: it memorizes noise. Too little: it misses real patterns.',
+          'Performance is checked on data it never saw during training.',
+          'A big gap between train and test accuracy signals overfitting.'
+        ],
+        loop:null
+      }},
+      { t:'Gradient Descent', d:'The optimization algorithm that nudges a model’s parameters to minimize its loss, step by step.', flow:{
+        nodes:['Current parameters','Compute gradient','Step downhill','Updated parameters'],
+        edges:['direction of steepest error','opposite direction, scaled'],
+        desc:[
+          'The model’s current set of weights.',
+          'Calculate how the loss changes with respect to each weight.',
+          'Move every weight a small step in the direction that reduces loss.',
+          'Slightly better parameters, ready for the next pass.'
+        ],
+        loop:'Repeats every training step until the loss stops decreasing.'
+      }},
+      { t:'Loss Function', d:'The function that measures how far a model’s predictions are from the truth — what gradient descent minimizes.', flow:{
+        nodes:['Prediction','True value','Distance measured','Loss score'],
+        edges:['compared against','by a formula'],
+        desc:[
+          'What the model currently outputs for one example.',
+          'What the correct answer actually was.',
+          'A formula (e.g. squared error, cross-entropy) measures the gap.',
+          'That gap becomes a single number gradient descent tries to shrink.'
+        ],
+        loop:null
+      }}
     ], flow:{
       nodes:['Collect data','Split data','Train model','Compute loss','Update weights','Evaluate'],
       edges:['partitions','fits','scores error','backprop','test on unseen data'],
@@ -515,13 +649,87 @@
       loop:'Train model → Compute loss → Update weights repeats every batch until the loss stops improving.'
     }},
     { id:'deep-learning', title:'Deep Learning', lede:'Neural networks, and the transformer architecture underneath nearly every modern model.', terms:[
-      ['Neural Network', 'Layers of connected artificial neurons — input, hidden, output — that learn representations of data through weighted connections.'],
-      ['Backpropagation', 'The algorithm that computes how much each weight contributed to a prediction’s error, so it can be corrected.'],
-      ['Activation Function', 'Introduces non-linearity (ReLU, sigmoid, softmax) so a network can learn more than straight lines.'],
-      ['Transformer', 'The 2017 architecture behind virtually every modern LLM — processes a sequence in parallel using attention instead of recurrence.'],
-      ['Attention Mechanism', 'Lets a model weigh how much every other part of the input matters when producing each part of the output.'],
-      ['Embeddings', 'Dense numeric vectors that place words, sentences, or images in a space where distance encodes meaning.'],
-      ['CNN', 'Convolutional networks specialized for grid-like data such as images.']
+      { t:'Neural Network', d:'Layers of connected artificial neurons — input, hidden, output — that learn representations of data through weighted connections.', flow:{
+        nodes:['Inputs × weights','Sum them','Add bias','Activation function','Output'],
+        edges:['each multiplied','totaled','shifted','squashed non-linearly'],
+        desc:[
+          'Every incoming value is multiplied by its own learned weight.',
+          'All the weighted values are added together.',
+          'A learned bias shifts the total up or down.',
+          'A non-linear activation function reshapes the result.',
+          'That becomes this neuron’s output, feeding the next layer.'
+        ],
+        loop:null
+      }},
+      { t:'Backpropagation', d:'The algorithm that computes how much each weight contributed to a prediction’s error, so it can be corrected.', flow:{
+        nodes:['Output error','Last layer’s blame','Propagate backward','Earlier layers’ blame','Every weight updated'],
+        edges:['chain rule','one layer back','chain rule again','all at once'],
+        desc:[
+          'Start from how wrong the final prediction was.',
+          'Compute exactly how much the last layer’s weights contributed.',
+          'The chain rule pushes that blame one layer back.',
+          'Each earlier layer gets its own share of the blame, layer by layer.',
+          'Every weight in the network is nudged by its share of the error.'
+        ],
+        loop:null
+      }},
+      { t:'Activation Function', d:'Introduces non-linearity (ReLU, sigmoid, softmax) so a network can learn more than straight lines.', flow:{
+        nodes:['Weighted sum','Linear value','Activation function','Non-linear output'],
+        edges:['raw number','passed through','bent'],
+        desc:[
+          'The neuron’s raw weighted-and-biased total.',
+          'On its own, this is just a straight line, no matter how many layers.',
+          'ReLU, sigmoid, or softmax reshapes it non-linearly.',
+          'Now the network can represent curves, not just straight lines.'
+        ],
+        loop:null
+      }},
+      { t:'Transformer', d:'The 2017 architecture behind virtually every modern LLM — processes a sequence in parallel using attention instead of recurrence.', flow:{
+        nodes:['Token embeddings','Self-attention','Feed-forward layer','Stack N times','Output representation'],
+        edges:['every token looks at every other','processes each position','repeats'],
+        desc:[
+          'Each input token starts as a vector.',
+          'Every token compares itself to every other token to see what matters.',
+          'A small network processes each position independently.',
+          'This attention + feed-forward block repeats dozens of times.',
+          'The final vectors encode the whole sequence’s meaning.'
+        ],
+        loop:null
+      }},
+      { t:'Attention Mechanism', d:'Lets a model weigh how much every other part of the input matters when producing each part of the output.', flow:{
+        nodes:['Query','Compare to Keys','Weight the Values','Weighted sum'],
+        edges:['for one token','similarity score per token','by relevance'],
+        desc:[
+          'One token asks: what do I need to know?',
+          'It’s compared against every other token’s "key".',
+          'Each other token’s "value" gets weighted by how relevant it is.',
+          'The weighted values are summed into that token’s new representation.'
+        ],
+        loop:null
+      }},
+      { t:'Embeddings', d:'Dense numeric vectors that place words, sentences, or images in a space where distance encodes meaning.', flow:{
+        nodes:['Discrete item','Lookup / encode','Dense vector','Nearby = similar meaning'],
+        edges:['word, image, etc.','learned mapping','points in space'],
+        desc:[
+          'A word, token, or item that starts as a discrete symbol.',
+          'A learned function maps it into continuous number space.',
+          'The result is a vector of hundreds of numbers.',
+          'Items with similar meaning end up close together in that space.'
+        ],
+        loop:null
+      }},
+      { t:'CNN', d:'Convolutional networks specialized for grid-like data such as images.', flow:{
+        nodes:['Image patch','Convolve with filter','Feature map','Pool','Deeper features'],
+        edges:['filter slides over it','detects a pattern','downsamples','more filters'],
+        desc:[
+          'A small window of the image.',
+          'A learned filter slides across the image detecting one pattern.',
+          'Every location gets a score for how strongly that pattern appeared.',
+          'Pooling shrinks the map, keeping only the strongest signals.',
+          'Stacking more filters builds up from edges to whole objects.'
+        ],
+        loop:null
+      }}
     ], flow:{
       nodes:['Input','Forward pass','Attention','Output','Loss','Backprop','Update weights'],
       edges:['encodes','weighs tokens','predicts','compares to truth','assigns blame','nudges'],
@@ -537,12 +745,72 @@
       loop:'The whole pass repeats for every training example, layer by layer.'
     }},
     { id:'nlp', title:'Natural Language Processing', lede:'The older discipline of getting computers to read and produce human language.', terms:[
-      ['Tokenization', 'Splitting text into the smaller units — words, subwords, or characters — a model actually processes.'],
-      ['Word Embeddings', 'Vector representations of words (Word2Vec, GloVe) that capture semantic similarity.'],
-      ['Named Entity Recognition', 'Identifying names, places, and organizations inside a block of text.'],
-      ['Sentiment Analysis', 'Determining the emotional tone — positive, negative, neutral — of a piece of text.'],
-      ['Machine Translation', 'Automatically translating text from one language to another.'],
-      ['Text Summarization', 'Condensing a document while preserving its key meaning.']
+      { t:'Tokenization', d:'Splitting text into the smaller units — words, subwords, or characters — a model actually processes.', flow:{
+        nodes:['Raw string','Split into pieces','Map to IDs','Token sequence'],
+        edges:['by rules or BPE','via a vocabulary','ready for the model'],
+        desc:[
+          '"unbelievable" as plain text.',
+          'A tokenizer splits it — maybe "un", "believe", "able".',
+          'Each piece is looked up in a fixed vocabulary and gets a number.',
+          'The model only ever sees this sequence of numbers.'
+        ],
+        loop:null
+      }},
+      { t:'Word Embeddings', d:'Vector representations of words (Word2Vec, GloVe) that capture semantic similarity.', flow:{
+        nodes:['Word','Co-occurrence statistics','Learned vector','Similar words nearby'],
+        edges:['appears near other words','trained to predict context','places it in space'],
+        desc:[
+          'A single word, e.g. "king".',
+          'The model tracks which words tend to appear near it.',
+          'Training compresses that pattern into a dense vector.',
+          '"queen" ends up nearby; "banana" ends up far away.'
+        ],
+        loop:null
+      }},
+      { t:'Named Entity Recognition', d:'Identifying names, places, and organizations inside a block of text.', flow:{
+        nodes:['Sentence','Tag each token','Group consecutive tags','Labeled entities'],
+        edges:['token by token','B-PERSON, I-PERSON, O…','merged into spans'],
+        desc:[
+          '"Sundar Pichai leads Google."',
+          'Each token is classified: person, organization, location, or none.',
+          'Consecutive same-type tags merge into one entity span.',
+          '"Sundar Pichai" → PERSON, "Google" → ORGANIZATION.'
+        ],
+        loop:null
+      }},
+      { t:'Sentiment Analysis', d:'Determining the emotional tone — positive, negative, neutral — of a piece of text.', flow:{
+        nodes:['Text input','Encode meaning','Classify polarity','Sentiment score'],
+        edges:['embeds the sentence','positive / negative / neutral'],
+        desc:[
+          '"This product completely changed my workflow."',
+          'The model encodes the sentence’s overall meaning.',
+          'A classifier head predicts the emotional polarity.',
+          'Output: positive, with a confidence score.'
+        ],
+        loop:null
+      }},
+      { t:'Machine Translation', d:'Automatically translating text from one language to another.', flow:{
+        nodes:['Source sentence','Encode meaning','Decode target language','Translated sentence'],
+        edges:['language A','shared representation','token by token, language B'],
+        desc:[
+          '"Bonjour le monde."',
+          'An encoder builds a language-independent representation of the meaning.',
+          'A decoder generates the target language one token at a time.',
+          '"Hello world."'
+        ],
+        loop:null
+      }},
+      { t:'Text Summarization', d:'Condensing a document while preserving its key meaning.', flow:{
+        nodes:['Long document','Identify key points','Compress','Short summary'],
+        edges:['reads the whole thing','ranks or generates','preserves meaning'],
+        desc:[
+          'A multi-paragraph article or report.',
+          'The model identifies the most important sentences or ideas.',
+          'It compresses them, extractively or by generating new sentences.',
+          'A few sentences that preserve the core meaning.'
+        ],
+        loop:null
+      }}
     ], flow:{
       nodes:['Raw text','Tokenize','Embed','Model','Task head','Output'],
       edges:['splits','vectorizes','processes sequence','specializes','labels or text'],
@@ -557,14 +825,95 @@
       loop:null
     }},
     { id:'llms', title:'Large Language Models', lede:'The transformer-based giants — Claude among them — trained on internet-scale, increasingly multimodal data.', terms:[
-      ['Pretraining', 'Training a model on huge volumes of raw data, usually by having it predict the next token, to learn general language patterns.'],
-      ['Context Window', 'The maximum amount of text, measured in tokens, a model can consider at once.'],
-      ['Tokens', 'The basic units an LLM reads and is priced by — rarely a clean match to words.'],
-      ['Temperature', 'A sampling setting that controls output randomness: low is more deterministic, high is more varied.'],
-      ['Hallucination', 'When a model states something fabricated with the same confidence as something true.'],
-      ['Multimodal Models', 'Models that read or generate more than one data type — text, images, audio, video — in the same conversation.'],
-      ['Chain-of-Thought', 'Prompting a model to reason through intermediate steps before answering, which improves accuracy on hard problems.'],
-      ['Extended Thinking', 'A dedicated reasoning phase before the final answer, as in Claude’s extended thinking mode.']
+      { t:'Pretraining', d:'Training a model on huge volumes of raw data, usually by having it predict the next token, to learn general language patterns.', flow:{
+        nodes:['Massive text corpus','Predict next token','Compare to actual','Update weights'],
+        edges:['billions of examples','a guess','measures error'],
+        desc:[
+          'Essentially the entire public internet, books, and code.',
+          'For every position, the model guesses the next token.',
+          'That guess is checked against what actually came next.',
+          'Every wrong guess nudges the weights very slightly.'
+        ],
+        loop:'This repeats trillions of times before a model is called "pretrained".'
+      }},
+      { t:'Context Window', d:'The maximum amount of text, measured in tokens, a model can consider at once.', flow:{
+        nodes:['System prompt','Conversation history','Current message','Total tokens','Fits or truncates'],
+        edges:['plus','plus','summed','against the limit'],
+        desc:[
+          'Standing instructions for the whole conversation.',
+          'Everything said so far, in order.',
+          'What the user just typed.',
+          'All of it is counted in tokens.',
+          'If it exceeds the model’s limit, the oldest content is dropped or summarized.'
+        ],
+        loop:null
+      }},
+      { t:'Tokens', d:'The basic units an LLM reads and is priced by — rarely a clean match to words.', flow:{
+        nodes:['Text','Tokenizer splits it','Token IDs','Billed / counted'],
+        edges:['subword pieces','looked up in vocabulary','per input and output'],
+        desc:[
+          'Any text you send or receive.',
+          'Split into subword pieces, not always whole words.',
+          'Each piece maps to a number in the model’s vocabulary.',
+          'Usage and cost are measured in these token counts, not words.'
+        ],
+        loop:null
+      }},
+      { t:'Temperature', d:'A sampling setting that controls output randomness: low is more deterministic, high is more varied.', flow:{
+        nodes:['Next-token probabilities','Scale by temperature','Reshaped distribution','Sample a token'],
+        edges:['raw model output','low = sharper, high = flatter','draws randomly'],
+        desc:[
+          'The model computes a probability for every possible next token.',
+          'Temperature stretches or flattens that probability curve.',
+          'Low temperature makes the top choice even more likely; high evens the odds.',
+          'A token is drawn from the reshaped distribution.'
+        ],
+        loop:null
+      }},
+      { t:'Hallucination', d:'When a model states something fabricated with the same confidence as something true.', flow:{
+        nodes:['Plausible pattern','No grounding check','Confident phrasing','Fabricated fact'],
+        edges:['sounds right','nothing to verify against','stated as certain'],
+        desc:[
+          'The model generates something that statistically resembles a real fact.',
+          'Without retrieval or verification, there’s nothing to check it against.',
+          'The model states it with the same fluent confidence as anything true.',
+          'The result reads convincingly but never happened.'
+        ],
+        loop:null
+      }},
+      { t:'Multimodal Models', d:'Models that read or generate more than one data type — text, images, audio, video — in the same conversation.', flow:{
+        nodes:['Text / image / audio input','Shared embedding space','Joint reasoning','Output in any modality'],
+        edges:['each encoded separately','aligned into one space','combined understanding'],
+        desc:[
+          'Different input types arrive — a photo, a question, a clip.',
+          'Each is encoded into the same kind of vector space.',
+          'The model reasons over all of them together, not separately.',
+          'The response can reference or generate any of the input modalities.'
+        ],
+        loop:null
+      }},
+      { t:'Chain-of-Thought', d:'Prompting a model to reason through intermediate steps before answering, which improves accuracy on hard problems.', flow:{
+        nodes:['Hard question','Reason step by step','Intermediate steps visible','Final answer'],
+        edges:['prompted to think aloud','each step builds on the last','grounded in reasoning'],
+        desc:[
+          'A question requiring multi-step logic.',
+          'The model is prompted to work through it explicitly.',
+          'Each intermediate step is generated and can be checked.',
+          'The final answer, grounded in the shown reasoning.'
+        ],
+        loop:null
+      }},
+      { t:'Extended Thinking', d:'A dedicated reasoning phase before the final answer, as in Claude’s extended thinking mode.', flow:{
+        nodes:['Complex prompt','Dedicated reasoning phase','Self-check','Final response'],
+        edges:['triggers deeper mode','works through it privately','verifies before answering'],
+        desc:[
+          'A prompt that benefits from deliberation, not an instant reply.',
+          'The model reasons in a separate phase before drafting an answer.',
+          'It can revisit and correct its own intermediate reasoning.',
+          'Only the polished final answer is shown by default.'
+        ],
+        loop:null
+      }}
     ], flow:{
       nodes:['Pretrain','Align','Prompt arrives','Tokenize','Generate','Sample','Stream tokens'],
       edges:['tune with feedback','sent by user','packs context','predicts next token','picks a token','emits'],
@@ -580,11 +929,61 @@
       loop:'Generate → Sample repeats once per output token, each new token feeding back into the context.'
     }},
     { id:'genai', title:'Generative AI', lede:'Models that create rather than classify.', terms:[
-      ['Text Generation', 'An LLM producing prose, code, or summaries token by token.'],
-      ['Diffusion Models', 'Generate images by starting from noise and gradually removing it, guided by a prompt.'],
-      ['GANs', 'Two competing networks — a generator and a discriminator — that push each other toward more realistic output.'],
-      ['Voice Generation', 'Text-to-speech and voice-cloning models that synthesize spoken audio.'],
-      ['Code Generation', 'Models trained to write, explain, and debug code, such as Claude Code or GitHub Copilot.']
+      { t:'Text Generation', d:'An LLM producing prose, code, or summaries token by token.', flow:{
+        nodes:['Prompt','Predict next token','Append it','Repeat'],
+        edges:['context so far','sampled from distribution','new context'],
+        desc:[
+          'The starting text or question.',
+          'The model predicts the single most likely next token.',
+          'That token is added to the sequence.',
+          'The process repeats, one token at a time.'
+        ],
+        loop:'Predict → Append repeats until a stop token or length limit is reached.'
+      }},
+      { t:'Diffusion Models', d:'Generate images by starting from noise and gradually removing it, guided by a prompt.', flow:{
+        nodes:['Random noise','Predict the noise','Subtract it','Slightly clearer image'],
+        edges:['guided by prompt','a small amount','one denoising step'],
+        desc:[
+          'Generation starts as pure static.',
+          'The model predicts what noise was added, given the prompt.',
+          'That predicted noise is partly removed.',
+          'The image is a little less noisy than before.'
+        ],
+        loop:'Predict → Subtract repeats tens to hundreds of times until a clean image emerges.'
+      }},
+      { t:'GANs', d:'Two competing networks — a generator and a discriminator — that push each other toward more realistic output.', flow:{
+        nodes:['Generator makes fake','Discriminator judges','Feedback to generator','Feedback to discriminator'],
+        edges:['from random noise','real or fake?','improve the fake'],
+        desc:[
+          'A generator network produces a candidate image from noise.',
+          'A discriminator network guesses whether it’s real or generated.',
+          'The generator learns from getting caught.',
+          'The discriminator learns from being fooled.'
+        ],
+        loop:'Both networks improve together until the fakes are indistinguishable from real.'
+      }},
+      { t:'Voice Generation', d:'Text-to-speech and voice-cloning models that synthesize spoken audio.', flow:{
+        nodes:['Text script','Predict speech features','Vocoder synthesizes waveform','Audio output'],
+        edges:['pitch, duration, tone','converts to raw audio'],
+        desc:[
+          'The words to be spoken.',
+          'The model predicts pitch, duration, and tone for each sound.',
+          'A vocoder turns those features into an actual audio waveform.',
+          'Natural-sounding speech, optionally in a cloned voice.'
+        ],
+        loop:null
+      }},
+      { t:'Code Generation', d:'Models trained to write, explain, and debug code, such as Claude Code or GitHub Copilot.', flow:{
+        nodes:['Natural-language request','Predict code tokens','Check syntax patterns','Working code'],
+        edges:['e.g. "sort this list"','learned from real repositories','matches conventions'],
+        desc:[
+          'A description of what the code should do.',
+          'The model predicts code token by token, like any other text.',
+          'Patterns learned from millions of real repositories shape valid syntax.',
+          'Runnable code in the requested language.'
+        ],
+        loop:null
+      }}
     ], flow:{
       nodes:['Prompt','Encode','Start from noise','Refine','Decode','Output'],
       edges:['embeds','initializes','denoises iteratively','converts','renders'],
@@ -599,11 +998,61 @@
       loop:'Refine repeats tens to hundreds of times, each pass sharpening the result.'
     }},
     { id:'vision', title:'Computer Vision', lede:'Teaching models to see.', terms:[
-      ['Image Classification', 'Assigning a single label to an entire image.'],
-      ['Object Detection', 'Locating and labeling multiple distinct objects within one image.'],
-      ['Image Segmentation', 'Labeling every pixel of an image by which object it belongs to.'],
-      ['OCR', 'Optical character recognition — extracting text from an image.'],
-      ['Vision Transformers', 'Transformers applied to image patches instead of the pixels a CNN would scan.']
+      { t:'Image Classification', d:'Assigning a single label to an entire image.', flow:{
+        nodes:['Image','CNN/ViT features','Class scores','Top label'],
+        edges:['extracted','one score per category','highest confidence wins'],
+        desc:[
+          'A photo — one whole image, one label needed.',
+          'The network extracts a feature vector summarizing the image.',
+          'A final layer scores every possible category.',
+          'The single highest-scoring label is returned: "golden retriever".'
+        ],
+        loop:null
+      }},
+      { t:'Object Detection', d:'Locating and labeling multiple distinct objects within one image.', flow:{
+        nodes:['Image','Propose regions','Classify each region','Boxes + labels'],
+        edges:['candidate areas','what’s in each one','filtered by confidence'],
+        desc:[
+          'A photo that may contain several objects.',
+          'The model proposes candidate regions that might contain something.',
+          'Each region is classified independently.',
+          'Bounding boxes with labels: "dog (0.98)", "frisbee (0.91)".'
+        ],
+        loop:null
+      }},
+      { t:'Image Segmentation', d:'Labeling every pixel of an image by which object it belongs to.', flow:{
+        nodes:['Image','Per-pixel classification','Mask per class','Segmented image'],
+        edges:['every pixel scored','grouped by class','overlaid'],
+        desc:[
+          'A photo, pixel by pixel.',
+          'Every single pixel gets its own class prediction.',
+          'Pixels of the same class form a mask.',
+          'The result: exact outlines of every object, not just a box.'
+        ],
+        loop:null
+      }},
+      { t:'OCR', d:'Optical character recognition — extracting text from an image.', flow:{
+        nodes:['Scanned image','Detect text regions','Recognize characters','Extracted text'],
+        edges:['locates lines/words','per-character classification'],
+        desc:[
+          'A photo or scan containing visible text.',
+          'The model finds where the text sits in the image.',
+          'Each character or word is recognized from its shape.',
+          'Editable, searchable plain text.'
+        ],
+        loop:null
+      }},
+      { t:'Vision Transformers', d:'Transformers applied to image patches instead of the pixels a CNN would scan.', flow:{
+        nodes:['Image','Split into patches','Patch embeddings','Self-attention across patches'],
+        edges:['16×16 squares','flattened & projected','every patch sees every other'],
+        desc:[
+          'A full image, before any processing.',
+          'The image is cut into a grid of fixed-size patches.',
+          'Each patch is flattened into a vector, like a token.',
+          'Attention lets every patch relate to every other patch directly.'
+        ],
+        loop:null
+      }}
     ], flow:{
       nodes:['Image','Scan patches','Extract features','Task head','Output'],
       edges:['filters or splits','abstracts layer by layer','specializes'],
@@ -617,10 +1066,50 @@
       loop:null
     }},
     { id:'rag', title:'Retrieval-Augmented Generation', lede:'Grounding an LLM in an external knowledge source, so it can answer from documents it never trained on.', terms:[
-      ['Vector Database', 'Stores embeddings and finds the ones most similar to a query in milliseconds — e.g. Pinecone, Weaviate, pgvector.'],
-      ['Chunking', 'Splitting a document into smaller pieces before embedding, so retrieval returns focused, relevant passages.'],
-      ['Semantic Search', 'Finding results by meaning rather than exact keyword match.'],
-      ['Grounding', 'Anchoring a model’s answer to retrieved, verifiable source material to cut down on hallucination.']
+      { t:'Vector Database', d:'Stores embeddings and finds the ones most similar to a query in milliseconds — e.g. Pinecone, Weaviate, pgvector.', flow:{
+        nodes:['Store embeddings','Query embedding arrives','Compute similarity','Return nearest neighbors'],
+        edges:['indexed for fast search','compared to every stored vector','ranked by distance'],
+        desc:[
+          'Millions of document-chunk vectors, indexed for fast lookup.',
+          'A new query is embedded the same way.',
+          'The database computes similarity against stored vectors.',
+          'The closest matches are returned, usually in milliseconds.'
+        ],
+        loop:null
+      }},
+      { t:'Chunking', d:'Splitting a document into smaller pieces before embedding, so retrieval returns focused, relevant passages.', flow:{
+        nodes:['Full document','Split by size or structure','Overlapping chunks','Each chunk embedded'],
+        edges:['too big to embed well','a little context preserved','ready for the vector DB'],
+        desc:[
+          'A document that’s far too long to embed as one unit.',
+          'It’s split by paragraph, heading, or a fixed token count.',
+          'Chunks slightly overlap so context isn’t lost at the edges.',
+          'Each chunk becomes its own searchable, embeddable unit.'
+        ],
+        loop:null
+      }},
+      { t:'Semantic Search', d:'Finding results by meaning rather than exact keyword match.', flow:{
+        nodes:['Query text','Embed the query','Compare to stored vectors','Ranked results'],
+        edges:['same model as documents','cosine similarity','most relevant first'],
+        desc:[
+          '"How do I reset my password?"',
+          'The query is embedded into the same vector space as the documents.',
+          'Every stored chunk is scored by similarity to the query vector.',
+          'Results are ranked by meaning, even without matching keywords.'
+        ],
+        loop:null
+      }},
+      { t:'Grounding', d:'Anchoring a model’s answer to retrieved, verifiable source material to cut down on hallucination.', flow:{
+        nodes:['Retrieved passages','Inserted into context','Model cites them','Verifiable answer'],
+        edges:['relevant source text','alongside the question','traces back to source'],
+        desc:[
+          'The actual source passages returned by retrieval.',
+          'They’re placed directly in the model’s context window.',
+          'The model is instructed to answer using — and often cite — that material.',
+          'An answer that can be checked against real source text, not just model memory.'
+        ],
+        loop:null
+      }}
     ], flow:{
       nodes:['Ingest docs','Chunk','Embed & store','User query','Embed query','Semantic search','Augment prompt','Grounded answer'],
       edges:['splits into passages','vectorizes','arrives','vectorizes','retrieves top matches','inserts as context','generates'],
@@ -637,10 +1126,50 @@
       loop:null
     }},
     { id:'prompting', title:'Prompt Engineering', lede:'Crafting the input to reliably shape the output.', terms:[
-      ['Zero-shot Prompting', 'Asking a model to do a task with no examples given.'],
-      ['Few-shot Prompting', 'Giving a handful of examples in the prompt to steer format and behavior.'],
-      ['System Prompt', 'The standing instructions that set a model’s role, tone, and constraints for a whole conversation.'],
-      ['Prompt Injection', 'A security risk where text embedded in the input tries to override the model’s real instructions.']
+      { t:'Zero-shot Prompting', d:'Asking a model to do a task with no examples given.', flow:{
+        nodes:['Task description only','No examples given','Model infers the format','Direct answer'],
+        edges:['just the instruction','relies on pretraining alone','best guess at structure'],
+        desc:[
+          '"Translate this sentence to French."',
+          'No worked examples are provided at all.',
+          'The model relies entirely on patterns learned during pretraining.',
+          'It infers the expected format and answers directly.'
+        ],
+        loop:null
+      }},
+      { t:'Few-shot Prompting', d:'Giving a handful of examples in the prompt to steer format and behavior.', flow:{
+        nodes:['2–3 worked examples','Pattern shown','New input','Matches the pattern'],
+        edges:['input → output pairs','implicit rule inferred','same format applied'],
+        desc:[
+          'A handful of example input/output pairs in the prompt.',
+          'The model infers the implicit rule connecting them.',
+          'A new, unseen input is given.',
+          'The model applies the same pattern to answer it.'
+        ],
+        loop:null
+      }},
+      { t:'System Prompt', d:'The standing instructions that set a model’s role, tone, and constraints for a whole conversation.', flow:{
+        nodes:['Role & tone set','Constraints defined','Every user turn','Consistent behavior'],
+        edges:['before conversation starts','what it can/can’t do','filtered through these rules'],
+        desc:[
+          '"You are a concise, technical assistant."',
+          'Rules about scope, tone, and what to avoid.',
+          'Every message the user sends is interpreted under these standing instructions.',
+          'The model’s persona stays consistent across the entire conversation.'
+        ],
+        loop:null
+      }},
+      { t:'Prompt Injection', d:'A security risk where text embedded in the input tries to override the model’s real instructions.', flow:{
+        nodes:['Legitimate instructions','Untrusted text arrives','Hidden command inside it','Model may obey the wrong one'],
+        edges:['system prompt / task','e.g. a webpage, a document','disguised as content'],
+        desc:[
+          'The real instructions the developer intended the model to follow.',
+          'Content from an external source — a webpage, an email, a file — enters the context.',
+          'That content secretly contains its own instructions.',
+          'Without safeguards, the model may follow the injected command instead.'
+        ],
+        loop:null
+      }}
     ], flow:{
       nodes:['Define intent','System prompt','Few-shot examples','Chain-of-thought','Send prompt','Evaluate output'],
       edges:['sets role & tone','shows the pattern','asks it to reason','generates a response','check & refine'],
@@ -655,11 +1184,61 @@
       loop:'Evaluate output feeds back into the earlier steps until the output is reliable.'
     }},
     { id:'fine-tuning', title:'Fine-Tuning & Adaptation', lede:'Ways to specialize a general model for a narrower job.', terms:[
-      ['Fine-Tuning', 'Continuing to train a pretrained model on a smaller, task-specific dataset.'],
-      ['Instruction Tuning', 'Fine-tuning a model specifically to follow natural-language instructions better.'],
-      ['RLHF', 'Reinforcement learning from human feedback — using human preference ratings to align model behavior.'],
-      ['LoRA / PEFT', 'Parameter-efficient fine-tuning that trains a small set of added parameters instead of the whole model.'],
-      ['Distillation', 'Training a smaller "student" model to mimic a larger "teacher" model’s outputs.']
+      { t:'Fine-Tuning', d:'Continuing to train a pretrained model on a smaller, task-specific dataset.', flow:{
+        nodes:['Pretrained weights','Task-specific examples','Continue training','Specialized weights'],
+        edges:['starting point','smaller dataset','same process, narrower data'],
+        desc:[
+          'A model that already knows general language.',
+          'A smaller dataset representing exactly the task you care about.',
+          'Training continues, using this narrower data.',
+          'The same architecture, now specialized for that task.'
+        ],
+        loop:null
+      }},
+      { t:'Instruction Tuning', d:'Fine-tuning a model specifically to follow natural-language instructions better.', flow:{
+        nodes:['Base model','Instruction/response pairs','Train to follow instructions','Helpful assistant behavior'],
+        edges:['completes text, doesn’t obey','thousands of examples','learns the pattern'],
+        desc:[
+          'A raw pretrained model just predicts plausible next text.',
+          'Curated examples pair an instruction with an ideal response.',
+          'Training on these teaches the model to follow requests, not just continue text.',
+          'The model now behaves like an assistant, not an autocomplete.'
+        ],
+        loop:null
+      }},
+      { t:'RLHF', d:'Reinforcement learning from human feedback — using human preference ratings to align model behavior.', flow:{
+        nodes:['Model generates responses','Humans rank them','Train a reward model','Optimize policy against it'],
+        edges:['multiple candidates','best to worst','predicts human preference'],
+        desc:[
+          'The model produces several candidate answers to the same prompt.',
+          'Human raters rank them from most to least preferred.',
+          'A separate reward model learns to predict those preferences.',
+          'The main model is optimized, via RL, to score higher on that reward model.'
+        ],
+        loop:'This cycle repeats across many prompts to steadily shift behavior toward what humans prefer.'
+      }},
+      { t:'LoRA / PEFT', d:'Parameter-efficient fine-tuning that trains a small set of added parameters instead of the whole model.', flow:{
+        nodes:['Frozen base weights','Small adapter matrices added','Train only the adapters','Merged at inference'],
+        edges:['untouched','tiny fraction of parameters','fast, cheap training'],
+        desc:[
+          'The full pretrained model, left completely unchanged.',
+          'Small trainable matrices are inserted alongside existing layers.',
+          'Only those new, tiny matrices are updated during training.',
+          'At inference, adapters are merged in or swapped per task.'
+        ],
+        loop:null
+      }},
+      { t:'Distillation', d:'Training a smaller "student" model to mimic a larger "teacher" model’s outputs.', flow:{
+        nodes:['Large teacher model','Generate soft outputs','Small student model','Mimics teacher’s behavior'],
+        edges:['runs on data','probability distributions, not just labels','trained to match them'],
+        desc:[
+          'A large, accurate, expensive-to-run model.',
+          'It produces full probability distributions over outputs, not just final answers.',
+          'A much smaller model is trained to reproduce those distributions.',
+          'The student approximates the teacher’s behavior cheaply.'
+        ],
+        loop:null
+      }}
     ], flow:{
       nodes:['Pretrained model','Task dataset','Choose method','Train','Evaluate','Distill (optional)'],
       edges:['assemble examples','LoRA, full, or RLHF','fits weights','checks generalization','shrinks for deployment'],
@@ -674,12 +1253,72 @@
       loop:null
     }},
     { id:'agents', title:'AI Agents', lede:'Systems that plan, use tools, and take multi-step action toward a goal instead of answering once.', terms:[
-      ['Agentic Loop', 'The cycle of reasoning, choosing a tool, observing the result, and deciding the next step — repeated until the task is done.'],
-      ['Tool Use / Function Calling', 'An LLM’s ability to call external functions or APIs: search the web, run code, query a database.'],
-      ['Planning', 'Breaking a complex goal into smaller, ordered steps before acting.'],
-      ['Memory', 'Short-term conversation context versus long-term knowledge an agent keeps across sessions.'],
-      ['Multi-Agent Systems', 'Several specialized agents collaborating — a researcher agent handing off to a writer agent.'],
-      ['Orchestration', 'Coordinating multiple tools, agents, or steps into one larger workflow.']
+      { t:'Agentic Loop', d:'The cycle of reasoning, choosing a tool, observing the result, and deciding the next step — repeated until the task is done.', flow:{
+        nodes:['Think','Act','Observe','Done?'],
+        edges:['decide next step','call a tool','read the result'],
+        desc:[
+          'The agent reasons about what to do next given the current state.',
+          'It calls a tool, function, or API.',
+          'It reads back whatever that action returned.',
+          'It checks whether the goal is now satisfied.'
+        ],
+        loop:'If not done, the loop returns to Think — this is the whole agent, repeated.'
+      }},
+      { t:'Tool Use / Function Calling', d:'An LLM’s ability to call external functions or APIs: search the web, run code, query a database.', flow:{
+        nodes:['Model decides a tool is needed','Fills in parameters','Tool executes','Result returned to model'],
+        edges:['matches to a schema','structured JSON','outside the model entirely'],
+        desc:[
+          'The model recognizes it can’t answer from knowledge alone.',
+          'It generates a structured call matching the tool’s schema.',
+          'The actual function or API runs, outside the model.',
+          'The output is added back into the model’s context to continue reasoning.'
+        ],
+        loop:null
+      }},
+      { t:'Planning', d:'Breaking a complex goal into smaller, ordered steps before acting.', flow:{
+        nodes:['Complex goal','Break into subgoals','Order the steps','Execute one at a time'],
+        edges:['too big for one action','dependencies considered','sequenced'],
+        desc:[
+          '"Book me a flight and a hotel for next week."',
+          'The goal is decomposed into smaller, concrete subgoals.',
+          'Subgoals are ordered by dependency — flight dates before hotel dates.',
+          'Each step executes, informing whether the plan needs to change.'
+        ],
+        loop:null
+      }},
+      { t:'Memory', d:'Short-term conversation context versus long-term knowledge an agent keeps across sessions.', flow:{
+        nodes:['New information learned','Short-term: this conversation','Long-term: saved for later','Recalled when relevant'],
+        edges:['during a task','kept in context','written to storage'],
+        desc:[
+          'Something the agent learns or is told mid-task.',
+          'It stays in the active context for the rest of this conversation.',
+          'Important facts may be written to persistent storage.',
+          'On a later turn or session, relevant memories are retrieved back in.'
+        ],
+        loop:null
+      }},
+      { t:'Multi-Agent Systems', d:'Several specialized agents collaborating — a researcher agent handing off to a writer agent.', flow:{
+        nodes:['Task assigned','Researcher agent gathers info','Hands off to writer agent','Combined output'],
+        edges:['split by role','passes findings','drafts using that research'],
+        desc:[
+          'A task too broad for one specialized agent.',
+          'One agent focuses purely on gathering information.',
+          'Its findings are passed to a second agent specialized in writing.',
+          'The final output combines both agents’ specialized work.'
+        ],
+        loop:null
+      }},
+      { t:'Orchestration', d:'Coordinating multiple tools, agents, or steps into one larger workflow.', flow:{
+        nodes:['Incoming task','Route to the right tool/agent','Track progress','Assemble final result'],
+        edges:['classified first','based on task type','across multiple steps'],
+        desc:[
+          'A request that may need several different capabilities.',
+          'An orchestrator decides which tool or sub-agent handles it.',
+          'Progress across multiple steps or agents is tracked centrally.',
+          'Results from every step are combined into one coherent answer.'
+        ],
+        loop:null
+      }}
     ], flow:{
       nodes:['Goal','Plan','Choose tool','Act','Observe','Update memory','Respond'],
       edges:['breaks down','selects','executes','reads result','keeps context','delivers result'],
@@ -695,9 +1334,39 @@
       loop:'Choose tool → Act → Observe repeats until the agent decides the goal is achieved.'
     }},
     { id:'mcp', title:'MCP & Tool Use', lede:'An open standard for wiring models up to the outside world.', terms:[
-      ['MCP Server', 'Exposes tools, data, or resources that an AI client can call — a file system, a database, an API.'],
-      ['MCP Client', 'The AI application, such as Claude Code, that connects to MCP servers to extend what it can do.'],
-      ['Tool Schema', 'A structured description of a tool’s name, purpose, and parameters, so a model can call it correctly.']
+      { t:'MCP Server', d:'Exposes tools, data, or resources that an AI client can call — a file system, a database, an API.', flow:{
+        nodes:['Wraps a capability','Defines tool schemas','Listens for requests','Executes and responds'],
+        edges:['e.g. a database, file system','name, purpose, parameters','from any MCP client'],
+        desc:[
+          'Wraps something useful — a database, an API, a file system.',
+          'Declares each capability as a named tool with a parameter schema.',
+          'Waits for a connected client to request one of those tools.',
+          'Runs the real action and returns a structured result.'
+        ],
+        loop:null
+      }},
+      { t:'MCP Client', d:'The AI application, such as Claude Code, that connects to MCP servers to extend what it can do.', flow:{
+        nodes:['AI application','Connects to MCP servers','Discovers available tools','Offers them to the model'],
+        edges:['e.g. Claude Code','via the protocol','reads their schemas'],
+        desc:[
+          'An app like Claude Code that wants extra capabilities.',
+          'It connects to one or more MCP servers.',
+          'It asks each server what tools it exposes.',
+          'Those tools become available for the model to call.'
+        ],
+        loop:null
+      }},
+      { t:'Tool Schema', d:'A structured description of a tool’s name, purpose, and parameters, so a model can call it correctly.', flow:{
+        nodes:['Tool name','Description','Parameter definitions','Model calls it correctly'],
+        edges:['unique identifier','what it does, when to use it','types and constraints'],
+        desc:[
+          'A short, unique name for the capability.',
+          'A plain-language description of what it does and when to use it.',
+          'The exact parameters it accepts, with types.',
+          'The model uses all of this to construct a valid, structured call.'
+        ],
+        loop:null
+      }}
     ], flow:{
       nodes:['AI client','MCP client','MCP server','Tool call','External system','Result returns'],
       edges:['speaks protocol','exposes schema','fills parameters','executes action','flows back'],
@@ -712,10 +1381,50 @@
       loop:null
     }},
     { id:'evaluation', title:'Evaluation & Benchmarking', lede:'How anyone claims one model is actually better than another.', terms:[
-      ['Benchmark', 'A standardized test set for comparing models — MMLU, HumanEval, GSM8K among them.'],
-      ['Precision / Recall / F1', 'Metrics for classification quality: how many predicted positives were right, how many real positives were caught, and their balance.'],
-      ['Perplexity', 'A measure of how well a language model predicts text — lower is better.'],
-      ['LLM-as-a-Judge', 'Using one model to score the outputs of another, in place of — or alongside — human review.']
+      { t:'Benchmark', d:'A standardized test set for comparing models — MMLU, HumanEval, GSM8K among them.', flow:{
+        nodes:['Fixed test set','Every model runs it','Scored the same way','Leaderboard comparison'],
+        edges:['same questions for all','no cherry-picking','standardized metric'],
+        desc:[
+          'A fixed, published set of questions or tasks.',
+          'Every model is run against the exact same set.',
+          'Answers are scored with one standardized method.',
+          'Scores are compared across models on a public leaderboard.'
+        ],
+        loop:null
+      }},
+      { t:'Precision / Recall / F1', d:'Metrics for classification quality: how many predicted positives were right, how many real positives were caught, and their balance.', flow:{
+        nodes:['Predictions vs. truth','Count true/false positives','Precision & Recall','Harmonic mean → F1'],
+        edges:['per example','tally the errors','two separate rates'],
+        desc:[
+          'Every prediction is compared against the ground truth.',
+          'Count how many were true positives, false positives, false negatives.',
+          'Precision: of what it flagged, how much was right? Recall: of what was real, how much did it catch?',
+          'F1 combines both into one balanced score.'
+        ],
+        loop:null
+      }},
+      { t:'Perplexity', d:'A measure of how well a language model predicts text — lower is better.', flow:{
+        nodes:['Held-out text','Model predicts each token','Probability assigned','Lower average = better'],
+        edges:['unseen during training','one prediction per position','confidence in the right answer'],
+        desc:[
+          'A passage of text the model was not trained on.',
+          'The model predicts a probability for each actual next token.',
+          'Confident, correct predictions score high probability.',
+          'Perplexity is the inverse average — lower means the model is less "surprised" by real language.'
+        ],
+        loop:null
+      }},
+      { t:'LLM-as-a-Judge', d:'Using one model to score the outputs of another, in place of — or alongside — human review.', flow:{
+        nodes:['Candidate outputs','Judge model scores them','Against a rubric','Ranked or rated result'],
+        edges:['from one or more models','reads and evaluates','criteria defined in advance'],
+        desc:[
+          'Open-ended outputs that don’t have one exact right answer.',
+          'A separate (often stronger) LLM reads and evaluates each one.',
+          'It scores against an explicit rubric or comparison criteria.',
+          'The result approximates human judgment, at much lower cost.'
+        ],
+        loop:null
+      }}
     ], flow:{
       nodes:['Pick benchmark','Run model','Compare to truth','Score','Aggregate','Rank models'],
       edges:['generates outputs','metrics or judge model','per example','totals results','compares'],
@@ -730,11 +1439,61 @@
       loop:null
     }},
     { id:'safety', title:'Responsible AI & Safety', lede:'Keeping powerful systems aligned with what people actually want.', terms:[
-      ['Alignment', 'Making sure a model’s goals and behavior match human values and intent.'],
-      ['Bias', 'Systematic unfairness in outputs, usually inherited from training data.'],
-      ['Interpretability', 'Understanding why a model produced a particular output, not just that it did.'],
-      ['Guardrails', 'Rules, filters, or systems that constrain a model’s behavior to prevent harmful output.'],
-      ['Red Teaming', 'Deliberately probing a model for weaknesses or harmful behavior before it ships.']
+      { t:'Alignment', d:'Making sure a model’s goals and behavior match human values and intent.', flow:{
+        nodes:['Human values & intent','Training signal','Model behavior shaped','Matches what was intended'],
+        edges:['defined via feedback/rules','RLHF, guardrails, etc.','over many iterations'],
+        desc:[
+          'What people actually want the model to do and avoid.',
+          'That intent is turned into a training signal — feedback, rules, examples.',
+          'The model’s behavior shifts to fit that signal.',
+          'The goal: behavior that matches human intent, not just the literal training objective.'
+        ],
+        loop:null
+      }},
+      { t:'Bias', d:'Systematic unfairness in outputs, usually inherited from training data.', flow:{
+        nodes:['Skewed training data','Model learns the skew','Reproduced in outputs','Measured across groups'],
+        edges:['e.g. underrepresentation','statistically, without intent','systematically unfair results'],
+        desc:[
+          'Training data that over- or under-represents certain groups or views.',
+          'The model learns whatever statistical pattern is actually there.',
+          'That skew shows up as systematically unfair outputs.',
+          'Audits test outputs across different groups and contexts to catch it.'
+        ],
+        loop:null
+      }},
+      { t:'Interpretability', d:'Understanding why a model produced a particular output, not just that it did.', flow:{
+        nodes:['Model decision','Inspect internals','Trace contributing factors','Human-readable explanation'],
+        edges:['a specific output','activations, attention, features','what drove this output'],
+        desc:[
+          'A specific prediction or generated output.',
+          'Researchers inspect internal activations or attention patterns.',
+          'They trace which inputs or features most influenced the result.',
+          'Ideally, a human-understandable account of why, not just what.'
+        ],
+        loop:null
+      }},
+      { t:'Guardrails', d:'Rules, filters, or systems that constrain a model’s behavior to prevent harmful output.', flow:{
+        nodes:['Model output drafted','Checked against rules/filters','Violates a policy?','Blocked or rewritten'],
+        edges:['before reaching the user','content, safety, format checks','if yes'],
+        desc:[
+          'The model’s raw draft response.',
+          'Automated filters check it against safety and policy rules.',
+          'If it violates a rule — harmful content, leaked data, wrong format —',
+          'it’s blocked or rewritten before the user ever sees it.'
+        ],
+        loop:null
+      }},
+      { t:'Red Teaming', d:'Deliberately probing a model for weaknesses or harmful behavior before it ships.', flow:{
+        nodes:['Adversarial tester','Deliberately provoke failure','Failure found','Fed back into guardrails'],
+        edges:['human or automated','crafted attacks, edge cases','documented'],
+        desc:[
+          'A person or system whose job is to try to break the model.',
+          'Deliberately crafted prompts try to provoke harmful or wrong behavior.',
+          'Any failure found is documented precisely.',
+          'That finding feeds back into training data or guardrail rules.'
+        ],
+        loop:null
+      }}
     ], flow:{
       nodes:['Train with feedback','Audit for bias','Red team','Add guardrails','Check interpretability','Monitor in production'],
       edges:['then','then','then','then','feeds back'],
@@ -749,10 +1508,50 @@
       loop:'Monitor in production feeds back into Train with feedback for the next model iteration.'
     }},
     { id:'mlops', title:'MLOps & Deployment', lede:'Running a trained model in the real world, at cost and at scale.', terms:[
-      ['Inference', 'Running a trained model to produce an output, as opposed to training it.'],
-      ['Latency & Throughput', 'How long one response takes to return, and how many requests the system can handle at once.'],
-      ['Quantization', 'Reducing a model’s numeric precision to shrink its size and speed up inference with little accuracy loss.'],
-      ['Prompt Caching', 'Reusing previously computed context so repeated prompts cost less and return faster.']
+      { t:'Inference', d:'Running a trained model to produce an output, as opposed to training it.', flow:{
+        nodes:['Loaded model weights','Input arrives','Forward pass only','Output returned'],
+        edges:['already trained, frozen','a request','no training, just prediction'],
+        desc:[
+          'The trained, frozen weights, loaded into memory.',
+          'A request comes in — a prompt, an image, a query.',
+          'Only a forward pass runs — no weight updates.',
+          'The prediction or generation is returned to the caller.'
+        ],
+        loop:null
+      }},
+      { t:'Latency & Throughput', d:'How long one response takes to return, and how many requests the system can handle at once.', flow:{
+        nodes:['Request sent','Time to first response','Total requests handled','Balance speed vs. volume'],
+        edges:['measured from here','= latency','per second = throughput'],
+        desc:[
+          'The moment a user or app sends a request.',
+          'How long until the response starts arriving — latency.',
+          'How many such requests the system handles per second — throughput.',
+          'Serving infrastructure is tuned to balance both under real load.'
+        ],
+        loop:null
+      }},
+      { t:'Quantization', d:'Reducing a model’s numeric precision to shrink its size and speed up inference with little accuracy loss.', flow:{
+        nodes:['Full-precision weights','Round to fewer bits','Smaller, faster model','Small accuracy trade-off'],
+        edges:['e.g. 32-bit floats','e.g. 8-bit or 4-bit integers','less memory, faster math'],
+        desc:[
+          'Model weights stored at full numerical precision.',
+          'Each weight is rounded to a much smaller number of bits.',
+          'The model takes less memory and runs faster.',
+          'Accuracy typically drops only slightly, if done carefully.'
+        ],
+        loop:null
+      }},
+      { t:'Prompt Caching', d:'Reusing previously computed context so repeated prompts cost less and return faster.', flow:{
+        nodes:['Repeated context','Computed once','Stored','Reused on next match'],
+        edges:['e.g. a long system prompt','full computation','cached result'],
+        desc:[
+          'Context that appears identically across many requests — a system prompt, a long document.',
+          'The first time, it’s fully computed as normal.',
+          'That computation is cached instead of discarded.',
+          'The next matching request reuses it instantly, cutting cost and latency.'
+        ],
+        loop:null
+      }}
     ], flow:{
       nodes:['Package model','Quantize','Deploy','Request arrives','Check cache','Run inference','Monitor & scale'],
       edges:['shrinks precision','hosts behind API','sent by user','reuse if seen','computes response','tracks load'],
@@ -775,7 +1574,7 @@
   document.getElementById('stats').innerHTML =
     '<div class="stat"><b>' + TOTAL + '</b><span>Terms</span></div>' +
     '<div class="stat"><b>' + DATA.length + '</b><span>Fields</span></div>' +
-    '<div class="stat"><b>' + DATA.length + '</b><span>Flow diagrams</span></div>';
+    '<div class="stat"><b>' + (DATA.length + TOTAL) + '</b><span>Flow diagrams</span></div>';
 
   var TAGLINE = 'Charting the concepts behind machine learning, generative AI, and the agents built on top of them.';
   var taglineEl = document.getElementById('tagline');
@@ -817,21 +1616,21 @@
       '</div>' +
       '<p class="category-lede">' + cat.lede + '</p>';
     section.appendChild(head);
-    head.querySelector('.flow-btn').addEventListener('click', function(){ openFlowModal(cat); });
+    head.querySelector('.flow-btn').addEventListener('click', function(){ openFlowModal(cat.title, cat.flow, null); });
 
     var grid = document.createElement('div');
     grid.className = 'term-grid';
     cat.terms.forEach(function(term){
       var card = document.createElement('article');
       card.className = 'term-card';
-      card.dataset.search = (term[0] + ' ' + term[1]).toLowerCase();
-      card.innerHTML = '<h3>' + term[0] + '</h3><p>' + term[1] + '</p>';
+      card.dataset.search = (term.t + ' ' + term.d).toLowerCase();
+      card.innerHTML = '<h3>' + term.t + '</h3><p>' + term.d + '</p>';
       card.tabIndex = 0;
       card.setAttribute('role', 'button');
       card.setAttribute('aria-haspopup', 'dialog');
-      card.addEventListener('click', function(){ openFlowModal(cat); });
+      card.addEventListener('click', function(){ openFlowModal(term.t, term.flow, cat.title); });
       card.addEventListener('keydown', function(e){
-        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openFlowModal(cat); }
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openFlowModal(term.t, term.flow, cat.title); }
       });
       grid.appendChild(card);
     });
@@ -968,7 +1767,8 @@
         }
       }
       parts.push('<g class="flow-node">');
-      var rectAttrs = 'x="' + (cx - nodeW / 2) + '" y="' + y + '" width="' + nodeW + '" height="' + nodeH + '" rx="8"';
+      var nodeLeft = cx - nodeW / 2;
+      var rectAttrs = 'x="' + nodeLeft + '" y="' + y + '" width="' + nodeW + '" height="' + nodeH + '" rx="8"';
       if (!reduceMotion) {
         var flashBegin = (i === 0) ? 0 : ((i - 1) * STAGGER + EDGE_DUR * 0.85);
         parts.push('<rect ' + rectAttrs + '>' +
@@ -978,7 +1778,10 @@
       } else {
         parts.push('<rect ' + rectAttrs + '/>');
       }
-      parts.push('<text x="' + cx + '" y="' + (y + nodeH / 2 + 4) + '" text-anchor="middle" class="flow-node-label">' + escapeXml(flow.nodes[i]) + '</text>');
+      var badgeCx = nodeLeft + 24;
+      parts.push('<circle class="flow-node-num" cx="' + badgeCx + '" cy="' + (y + nodeH / 2) + '" r="11"/>');
+      parts.push('<text x="' + badgeCx + '" y="' + (y + nodeH / 2 + 3.5) + '" class="flow-node-num-label">' + (i + 1) + '</text>');
+      parts.push('<text x="' + (nodeLeft + 46) + '" y="' + (y + nodeH / 2 + 4) + '" text-anchor="start" class="flow-node-label">' + escapeXml(flow.nodes[i]) + '</text>');
       parts.push('</g>');
     }
     parts.push('</svg>');
@@ -987,6 +1790,7 @@
 
   var modalOverlay = document.getElementById('modalOverlay');
   var modalTitle = document.getElementById('modalTitle');
+  var modalContext = document.getElementById('modalContext');
   var modalSvgWrap = document.getElementById('modalSvgWrap');
   var modalCaption = document.getElementById('modalCaption');
   var modalLoop = document.getElementById('modalLoop');
@@ -994,12 +1798,17 @@
   var modalClose = document.getElementById('modalClose');
   var lastFocused = null;
 
-  function openFlowModal(cat){
-    var flow = cat.flow;
+  function openFlowModal(title, flow, fieldName){
     lastFocused = document.activeElement;
-    modalTitle.textContent = cat.title;
+    modalTitle.textContent = title;
+    if (fieldName) {
+      modalContext.innerHTML = 'Part of <b>' + escapeXml(fieldName) + '</b>';
+      modalContext.hidden = false;
+    } else {
+      modalContext.hidden = true;
+    }
     modalSvgWrap.innerHTML = buildFlowSVG(flow);
-    modalCaption.textContent = 'How ' + cat.title + ' works, from ' + flow.nodes[0].toLowerCase() + ' to ' + flow.nodes[flow.nodes.length - 1].toLowerCase() + '.';
+    modalCaption.textContent = 'How ' + title + ' works, from ' + flow.nodes[0].toLowerCase() + ' to ' + flow.nodes[flow.nodes.length - 1].toLowerCase() + '.';
     modalStepsList.innerHTML = flow.nodes.map(function(node, i){
       return '<li><b>' + node + '</b> — ' + flow.desc[i] + '</li>';
     }).join('');
