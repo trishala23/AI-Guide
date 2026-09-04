@@ -1,0 +1,710 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="An interactive field guide to the AI concepts shaping today — from neural networks to autonomous agents — with live search and a token-splitting demo.">
+<title>Latent Atlas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Source+Sans+3:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --void:#0a0d13;
+    --surface:#131926;
+    --surface-2:#1a2233;
+    --border:#28324a;
+    --border-soft:#1f2738;
+    --text:#eef1f7;
+    --text-dim:#96a1ba;
+    --text-faint:#5c6883;
+    --accent:#ff9d52;
+    --accent-soft:#ff9d521a;
+    --accent-strong:#ffb573;
+    --mint:#7fe0c4;
+    --rose:#f2879f;
+    --periwinkle:#8ba4f0;
+    --font-display:'Fraunces', ui-serif, Georgia, serif;
+    --font-body:'Source Sans 3', ui-sans-serif, system-ui, sans-serif;
+    --font-mono:'IBM Plex Mono', ui-monospace, 'SF Mono', monospace;
+  }
+
+  *{ box-sizing:border-box; }
+  html{ color-scheme: dark; }
+  body{
+    margin:0;
+    background:var(--void);
+    color:var(--text);
+    font-family:var(--font-body);
+    font-size:16px;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3{ font-family:var(--font-display); font-weight:600; text-wrap:balance; margin:0; color:var(--text); }
+  p{ margin:0; }
+  a{ color:var(--accent-strong); }
+  ::selection{ background:var(--accent-soft); color:var(--accent-strong); }
+
+  a:focus-visible, button:focus-visible, input:focus-visible, .chip:focus-visible{
+    outline:2px solid var(--accent);
+    outline-offset:2px;
+    border-radius:4px;
+  }
+
+  /* ---------- Hero ---------- */
+  .hero{
+    position:relative;
+    padding: 88px 24px 56px;
+    overflow:hidden;
+    background:
+      radial-gradient(ellipse 900px 480px at 50% -8%, #1c2438 0%, transparent 65%),
+      var(--void);
+    border-bottom:1px solid var(--border-soft);
+  }
+  .hero canvas{
+    position:absolute; inset:0; width:100%; height:100%;
+    opacity:.8;
+  }
+  .hero-scrim{
+    position:absolute; inset:0;
+    background:linear-gradient(180deg, rgba(10,13,19,.35) 0%, rgba(10,13,19,.55) 55%, var(--void) 100%);
+  }
+  .hero-inner{
+    position:relative;
+    max-width:760px;
+    margin:0 auto;
+    text-align:center;
+  }
+  .eyebrow{
+    font-family:var(--font-mono);
+    font-size:.72rem;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--accent-strong);
+  }
+  .hero h1{
+    font-size:clamp(2.6rem, 6.5vw, 4.6rem);
+    letter-spacing:-.01em;
+    margin-top:14px;
+    background:linear-gradient(180deg, #fff, #cfd6e6 140%);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  .tagline{
+    font-size:clamp(1rem, 2vw, 1.2rem);
+    color:var(--text-dim);
+    max-width:52ch;
+    margin:20px auto 0;
+    min-height:1.6em;
+  }
+  .tagline .cursor{
+    display:inline-block; width:2px; height:1em; background:var(--accent);
+    margin-left:2px; vertical-align:-2px;
+    animation:blink 1s step-end infinite;
+  }
+  @keyframes blink{ 50%{ opacity:0; } }
+
+  .stats{
+    display:flex; justify-content:center; gap:0;
+    margin:40px auto 0;
+    font-family:var(--font-mono);
+    border-top:1px solid var(--border-soft);
+    max-width:560px;
+  }
+  .stat{
+    flex:1; padding:16px 10px 0; text-align:center;
+    border-right:1px solid var(--border-soft);
+  }
+  .stat:last-child{ border-right:none; }
+  .stat b{ display:block; font-size:1.5rem; color:var(--text); font-weight:500; }
+  .stat span{ font-size:.68rem; letter-spacing:.06em; text-transform:uppercase; color:var(--text-faint); }
+
+  /* ---------- Control bar ---------- */
+  .control-bar{
+    position:sticky; top:0; z-index:20;
+    background:rgba(10,13,19,.88);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--border-soft);
+    padding:14px 24px;
+  }
+  .control-bar-inner{
+    max-width:1120px; margin:0 auto;
+    display:flex; flex-wrap:wrap; gap:12px 16px; align-items:center;
+  }
+  .search-wrap{ position:relative; flex:1 1 260px; min-width:220px; }
+  .search-wrap svg{ position:absolute; left:12px; top:50%; transform:translateY(-50%); opacity:.5; }
+  #search{
+    width:100%;
+    background:var(--surface);
+    border:1px solid var(--border);
+    color:var(--text);
+    font-family:var(--font-body);
+    font-size:.92rem;
+    padding:10px 14px 10px 36px;
+    border-radius:8px;
+  }
+  #search::placeholder{ color:var(--text-faint); }
+  #search:focus-visible{ outline:2px solid var(--accent); outline-offset:0; }
+
+  .chips{
+    display:flex; gap:6px; overflow-x:auto; flex:2 1 480px;
+    scrollbar-width:thin;
+  }
+  .chip{
+    font-family:var(--font-mono);
+    font-size:.72rem;
+    white-space:nowrap;
+    color:var(--text-dim);
+    background:var(--surface);
+    border:1px solid var(--border);
+    padding:6px 11px;
+    border-radius:100px;
+    cursor:pointer;
+    transition:border-color .15s, color .15s, background .15s;
+  }
+  .chip:hover{ border-color:var(--accent); color:var(--text); }
+  .chip.active{ border-color:var(--accent); color:var(--accent-strong); background:var(--accent-soft); }
+
+  .result-note{
+    font-family:var(--font-mono); font-size:.72rem; color:var(--text-faint);
+    text-align:center; padding:16px 24px 0; max-width:1120px; margin:0 auto;
+  }
+  .result-note b{ color:var(--accent-strong); font-weight:500; }
+
+  /* ---------- Atlas / categories ---------- */
+  #atlas{ max-width:1120px; margin:0 auto; padding:8px 24px 40px; }
+  .category{ padding:52px 0 8px; border-top:1px solid var(--border-soft); }
+  .category:first-child{ border-top:none; }
+  .category-head{
+    display:grid; grid-template-columns:auto 1fr; gap:6px 18px; align-items:baseline;
+    margin-bottom:22px;
+  }
+  .category-num{
+    font-family:var(--font-mono); font-size:.8rem; color:var(--text-faint);
+    grid-row:1 / 3;
+  }
+  .category-head h2{ font-size:1.55rem; }
+  .category-lede{ grid-column:2; color:var(--text-dim); font-size:.94rem; max-width:62ch; }
+
+  .term-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(252px, 1fr));
+    gap:12px;
+  }
+  .term-card{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:16px 18px;
+    transition:transform .15s ease, border-color .15s ease, background .15s ease;
+  }
+  .term-card:hover{
+    transform:translateY(-2px);
+    border-color:var(--accent);
+    background:var(--surface-2);
+  }
+  .term-card h3{
+    font-size:1.02rem;
+    font-weight:500;
+    margin-bottom:6px;
+    color:var(--text);
+  }
+  .term-card p{
+    font-size:.87rem;
+    color:var(--text-dim);
+    line-height:1.55;
+  }
+  .term-card mark{
+    background:var(--accent-soft);
+    color:var(--accent-strong);
+    border-radius:3px;
+    padding:0 1px;
+  }
+  .term-card[hidden]{ display:none; }
+  .category[hidden]{ display:none; }
+
+  /* ---------- Tokenizer demo ---------- */
+  .tokenizer{
+    max-width:1120px; margin:24px auto 0; padding:52px 24px 60px;
+    border-top:1px solid var(--border-soft);
+  }
+  .tokenizer-head{ max-width:62ch; margin-bottom:24px; }
+  .tokenizer-head h2{ font-size:1.55rem; margin-bottom:10px; }
+  .tokenizer-head p{ color:var(--text-dim); font-size:.94rem; }
+  #tokenInput{
+    width:100%;
+    background:var(--surface);
+    border:1px solid var(--border);
+    color:var(--text);
+    font-family:var(--font-body);
+    font-size:1rem;
+    padding:12px 14px;
+    border-radius:8px;
+    margin-bottom:18px;
+  }
+  #tokenInput:focus-visible{ outline:2px solid var(--accent); }
+  .token-output{
+    display:flex; flex-wrap:wrap; gap:6px;
+    padding:20px;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:10px;
+    min-height:64px;
+  }
+  .token{
+    font-family:var(--font-mono);
+    font-size:.86rem;
+    padding:4px 8px;
+    border-radius:5px;
+    color:var(--text);
+  }
+  .token-count{
+    font-family:var(--font-mono); font-size:.74rem; color:var(--text-faint);
+    margin-top:12px;
+  }
+  .token-count b{ color:var(--accent-strong); }
+
+  /* ---------- Footer ---------- */
+  footer{
+    border-top:1px solid var(--border-soft);
+    padding:44px 24px 60px;
+  }
+  .footer-inner{
+    max-width:1120px; margin:0 auto;
+    display:flex; flex-wrap:wrap; justify-content:space-between; gap:28px 40px;
+  }
+  .footer-col h4{
+    font-family:var(--font-mono); font-size:.72rem; letter-spacing:.08em;
+    text-transform:uppercase; color:var(--text-faint); margin-bottom:12px; font-weight:400;
+  }
+  .footer-col ul{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px; }
+  .footer-col a{ color:var(--text-dim); text-decoration:none; font-size:.88rem; }
+  .footer-col a:hover{ color:var(--accent-strong); }
+  .colophon{
+    max-width:1120px; margin:40px auto 0; padding-top:20px;
+    border-top:1px solid var(--border-soft);
+    font-family:var(--font-mono); font-size:.72rem; color:var(--text-faint);
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .term-card, .chip{ transition:none; }
+    .cursor{ animation:none; opacity:1; }
+  }
+
+  @media (max-width:640px){
+    .hero{ padding:64px 18px 40px; }
+    .stats{ max-width:100%; }
+    .category-head{ grid-template-columns:1fr; }
+    .category-num{ grid-row:auto; }
+    .category-lede{ grid-column:1; }
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <canvas id="graph" aria-hidden="true"></canvas>
+  <div class="hero-scrim" aria-hidden="true"></div>
+  <div class="hero-inner">
+    <p class="eyebrow">A field guide to artificial intelligence</p>
+    <h1>Latent Atlas</h1>
+    <p class="tagline" id="tagline"></p>
+    <div class="stats" id="stats"></div>
+  </div>
+</header>
+
+<div class="control-bar">
+  <div class="control-bar-inner">
+    <div class="search-wrap">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      <input id="search" type="search" placeholder="Search the atlas — try “attention” or “RAG”…" autocomplete="off">
+    </div>
+    <nav class="chips" id="chipNav" aria-label="Jump to field"></nav>
+  </div>
+</div>
+<p class="result-note" id="resultNote"></p>
+
+<main id="atlas"></main>
+
+<section class="tokenizer">
+  <div class="tokenizer-head">
+    <h2>Watch a sentence become tokens</h2>
+    <p>Language models don't read words — they read <b>tokens</b>, the sub-word chunks a tokenizer splits text into before anything else happens. Edit the sentence below to see it split live. (This is a simplified word/punctuation split for illustration — production tokenizers like BPE often split mid-word.)</p>
+  </div>
+  <input id="tokenInput" type="text" value="Attention lets a transformer weigh every token against every other token." autocomplete="off">
+  <div class="token-output" id="tokenOutput"></div>
+  <p class="token-count" id="tokenCount"></p>
+</section>
+
+<footer>
+  <div class="footer-inner">
+    <div class="footer-col">
+      <h4>Fields</h4>
+      <ul id="footerFields"></ul>
+    </div>
+    <div class="footer-col">
+      <h4>Go deeper</h4>
+      <ul>
+        <li><a href="https://docs.anthropic.com" target="_blank" rel="noopener">Anthropic — Claude Docs</a></li>
+        <li><a href="https://huggingface.co/course" target="_blank" rel="noopener">Hugging Face — NLP Course</a></li>
+        <li><a href="https://developers.google.com/machine-learning/crash-course" target="_blank" rel="noopener">Google — ML Crash Course</a></li>
+        <li><a href="https://arxiv.org/abs/1706.03762" target="_blank" rel="noopener">"Attention Is All You Need" (2017)</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>About this atlas</h4>
+      <ul>
+        <li style="color:var(--text-dim)">A living map — corrections and additions welcome via pull request.</li>
+      </ul>
+    </div>
+  </div>
+  <p class="colophon">Latent Atlas · charted for AI-Guide</p>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+
+  var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---------------- Data ---------------- */
+  var DATA = [
+    { id:'foundations', title:'Foundations', lede:'Four nested fields, each one a specialization of the last.', terms:[
+      ['Artificial Intelligence (AI)', 'The broad field of building machines that perform tasks normally requiring human intelligence — reasoning, learning, perception, language.'],
+      ['Machine Learning (ML)', 'A subset of AI where systems learn patterns from data instead of following hand-written rules.'],
+      ['Deep Learning (DL)', 'A subset of ML that uses multi-layered neural networks to learn complex, hierarchical patterns.'],
+      ['Generative AI (GenAI)', 'A subset of deep learning focused on generating new content — text, images, audio, code — rather than only making predictions.']
+    ]},
+    { id:'machine-learning', title:'Machine Learning', lede:'The paradigms models are trained under, and the vocabulary for judging whether training worked.', terms:[
+      ['Supervised Learning', 'Learns from labeled input–output pairs, e.g. spam detection or price prediction.'],
+      ['Unsupervised Learning', 'Finds structure in unlabeled data, e.g. customer segmentation or clustering.'],
+      ['Reinforcement Learning (RL)', 'Learns by trial and error, guided by rewards and penalties — used in game-playing agents and robotics.'],
+      ['Self-Supervised Learning', 'Generates its own labels from raw data — how most LLMs are pretrained, by predicting the next token.'],
+      ['Features & Labels', 'Features are the inputs a model sees; labels are the correct outputs it is trained to predict.'],
+      ['Overfitting / Underfitting', 'A model that memorizes training data instead of generalizing overfits; one too simple to capture the pattern underfits.'],
+      ['Gradient Descent', 'The optimization algorithm that nudges a model’s parameters to minimize its loss, step by step.'],
+      ['Loss Function', 'The function that measures how far a model’s predictions are from the truth — what gradient descent minimizes.']
+    ]},
+    { id:'deep-learning', title:'Deep Learning', lede:'Neural networks, and the transformer architecture underneath nearly every modern model.', terms:[
+      ['Neural Network', 'Layers of connected artificial neurons — input, hidden, output — that learn representations of data through weighted connections.'],
+      ['Backpropagation', 'The algorithm that computes how much each weight contributed to a prediction’s error, so it can be corrected.'],
+      ['Activation Function', 'Introduces non-linearity (ReLU, sigmoid, softmax) so a network can learn more than straight lines.'],
+      ['Transformer', 'The 2017 architecture behind virtually every modern LLM — processes a sequence in parallel using attention instead of recurrence.'],
+      ['Attention Mechanism', 'Lets a model weigh how much every other part of the input matters when producing each part of the output.'],
+      ['Embeddings', 'Dense numeric vectors that place words, sentences, or images in a space where distance encodes meaning.'],
+      ['CNN', 'Convolutional networks specialized for grid-like data such as images.']
+    ]},
+    { id:'nlp', title:'Natural Language Processing', lede:'The older discipline of getting computers to read and produce human language.', terms:[
+      ['Tokenization', 'Splitting text into the smaller units — words, subwords, or characters — a model actually processes.'],
+      ['Word Embeddings', 'Vector representations of words (Word2Vec, GloVe) that capture semantic similarity.'],
+      ['Named Entity Recognition', 'Identifying names, places, and organizations inside a block of text.'],
+      ['Sentiment Analysis', 'Determining the emotional tone — positive, negative, neutral — of a piece of text.'],
+      ['Machine Translation', 'Automatically translating text from one language to another.'],
+      ['Text Summarization', 'Condensing a document while preserving its key meaning.']
+    ]},
+    { id:'llms', title:'Large Language Models', lede:'The transformer-based giants — Claude among them — trained on internet-scale, increasingly multimodal data.', terms:[
+      ['Pretraining', 'Training a model on huge volumes of raw data, usually by having it predict the next token, to learn general language patterns.'],
+      ['Context Window', 'The maximum amount of text, measured in tokens, a model can consider at once.'],
+      ['Tokens', 'The basic units an LLM reads and is priced by — rarely a clean match to words.'],
+      ['Temperature', 'A sampling setting that controls output randomness: low is more deterministic, high is more varied.'],
+      ['Hallucination', 'When a model states something fabricated with the same confidence as something true.'],
+      ['Multimodal Models', 'Models that read or generate more than one data type — text, images, audio, video — in the same conversation.'],
+      ['Chain-of-Thought', 'Prompting a model to reason through intermediate steps before answering, which improves accuracy on hard problems.'],
+      ['Extended Thinking', 'A dedicated reasoning phase before the final answer, as in Claude’s extended thinking mode.']
+    ]},
+    { id:'genai', title:'Generative AI', lede:'Models that create rather than classify.', terms:[
+      ['Text Generation', 'An LLM producing prose, code, or summaries token by token.'],
+      ['Diffusion Models', 'Generate images by starting from noise and gradually removing it, guided by a prompt.'],
+      ['GANs', 'Two competing networks — a generator and a discriminator — that push each other toward more realistic output.'],
+      ['Voice Generation', 'Text-to-speech and voice-cloning models that synthesize spoken audio.'],
+      ['Code Generation', 'Models trained to write, explain, and debug code, such as Claude Code or GitHub Copilot.']
+    ]},
+    { id:'vision', title:'Computer Vision', lede:'Teaching models to see.', terms:[
+      ['Image Classification', 'Assigning a single label to an entire image.'],
+      ['Object Detection', 'Locating and labeling multiple distinct objects within one image.'],
+      ['Image Segmentation', 'Labeling every pixel of an image by which object it belongs to.'],
+      ['OCR', 'Optical character recognition — extracting text from an image.'],
+      ['Vision Transformers', 'Transformers applied to image patches instead of the pixels a CNN would scan.']
+    ]},
+    { id:'rag', title:'Retrieval-Augmented Generation', lede:'Grounding an LLM in an external knowledge source, so it can answer from documents it never trained on.', terms:[
+      ['Vector Database', 'Stores embeddings and finds the ones most similar to a query in milliseconds — e.g. Pinecone, Weaviate, pgvector.'],
+      ['Chunking', 'Splitting a document into smaller pieces before embedding, so retrieval returns focused, relevant passages.'],
+      ['Semantic Search', 'Finding results by meaning rather than exact keyword match.'],
+      ['Grounding', 'Anchoring a model’s answer to retrieved, verifiable source material to cut down on hallucination.']
+    ]},
+    { id:'prompting', title:'Prompt Engineering', lede:'Crafting the input to reliably shape the output.', terms:[
+      ['Zero-shot Prompting', 'Asking a model to do a task with no examples given.'],
+      ['Few-shot Prompting', 'Giving a handful of examples in the prompt to steer format and behavior.'],
+      ['System Prompt', 'The standing instructions that set a model’s role, tone, and constraints for a whole conversation.'],
+      ['Prompt Injection', 'A security risk where text embedded in the input tries to override the model’s real instructions.']
+    ]},
+    { id:'fine-tuning', title:'Fine-Tuning & Adaptation', lede:'Ways to specialize a general model for a narrower job.', terms:[
+      ['Fine-Tuning', 'Continuing to train a pretrained model on a smaller, task-specific dataset.'],
+      ['Instruction Tuning', 'Fine-tuning a model specifically to follow natural-language instructions better.'],
+      ['RLHF', 'Reinforcement learning from human feedback — using human preference ratings to align model behavior.'],
+      ['LoRA / PEFT', 'Parameter-efficient fine-tuning that trains a small set of added parameters instead of the whole model.'],
+      ['Distillation', 'Training a smaller "student" model to mimic a larger "teacher" model’s outputs.']
+    ]},
+    { id:'agents', title:'AI Agents', lede:'Systems that plan, use tools, and take multi-step action toward a goal instead of answering once.', terms:[
+      ['Agentic Loop', 'The cycle of reasoning, choosing a tool, observing the result, and deciding the next step — repeated until the task is done.'],
+      ['Tool Use / Function Calling', 'An LLM’s ability to call external functions or APIs: search the web, run code, query a database.'],
+      ['Planning', 'Breaking a complex goal into smaller, ordered steps before acting.'],
+      ['Memory', 'Short-term conversation context versus long-term knowledge an agent keeps across sessions.'],
+      ['Multi-Agent Systems', 'Several specialized agents collaborating — a researcher agent handing off to a writer agent.'],
+      ['Orchestration', 'Coordinating multiple tools, agents, or steps into one larger workflow.']
+    ]},
+    { id:'mcp', title:'MCP & Tool Use', lede:'An open standard for wiring models up to the outside world.', terms:[
+      ['MCP Server', 'Exposes tools, data, or resources that an AI client can call — a file system, a database, an API.'],
+      ['MCP Client', 'The AI application, such as Claude Code, that connects to MCP servers to extend what it can do.'],
+      ['Tool Schema', 'A structured description of a tool’s name, purpose, and parameters, so a model can call it correctly.']
+    ]},
+    { id:'evaluation', title:'Evaluation & Benchmarking', lede:'How anyone claims one model is actually better than another.', terms:[
+      ['Benchmark', 'A standardized test set for comparing models — MMLU, HumanEval, GSM8K among them.'],
+      ['Precision / Recall / F1', 'Metrics for classification quality: how many predicted positives were right, how many real positives were caught, and their balance.'],
+      ['Perplexity', 'A measure of how well a language model predicts text — lower is better.'],
+      ['LLM-as-a-Judge', 'Using one model to score the outputs of another, in place of — or alongside — human review.']
+    ]},
+    { id:'safety', title:'Responsible AI & Safety', lede:'Keeping powerful systems aligned with what people actually want.', terms:[
+      ['Alignment', 'Making sure a model’s goals and behavior match human values and intent.'],
+      ['Bias', 'Systematic unfairness in outputs, usually inherited from training data.'],
+      ['Interpretability', 'Understanding why a model produced a particular output, not just that it did.'],
+      ['Guardrails', 'Rules, filters, or systems that constrain a model’s behavior to prevent harmful output.'],
+      ['Red Teaming', 'Deliberately probing a model for weaknesses or harmful behavior before it ships.']
+    ]},
+    { id:'mlops', title:'MLOps & Deployment', lede:'Running a trained model in the real world, at cost and at scale.', terms:[
+      ['Inference', 'Running a trained model to produce an output, as opposed to training it.'],
+      ['Latency & Throughput', 'How long one response takes to return, and how many requests the system can handle at once.'],
+      ['Quantization', 'Reducing a model’s numeric precision to shrink its size and speed up inference with little accuracy loss.'],
+      ['Prompt Caching', 'Reusing previously computed context so repeated prompts cost less and return faster.']
+    ]}
+  ];
+
+  var TOTAL = DATA.reduce(function(n, c){ return n + c.terms.length; }, 0);
+
+  /* ---------------- Hero stats + tagline ---------------- */
+  document.getElementById('stats').innerHTML =
+    '<div class="stat"><b>' + TOTAL + '</b><span>Terms</span></div>' +
+    '<div class="stat"><b>' + DATA.length + '</b><span>Fields</span></div>' +
+    '<div class="stat"><b>1</b><span>Map</span></div>';
+
+  var TAGLINE = 'Charting the concepts behind machine learning, generative AI, and the agents built on top of them.';
+  var taglineEl = document.getElementById('tagline');
+  if (reduceMotion) {
+    taglineEl.textContent = TAGLINE;
+  } else {
+    var i = 0;
+    taglineEl.innerHTML = '<span class="cursor"></span>';
+    (function type(){
+      if (i <= TAGLINE.length) {
+        taglineEl.innerHTML = TAGLINE.slice(0, i) + '<span class="cursor"></span>';
+        i++;
+        setTimeout(type, 18);
+      }
+    })();
+  }
+
+  /* ---------------- Render atlas ---------------- */
+  var atlas = document.getElementById('atlas');
+  var chipNav = document.getElementById('chipNav');
+  var footerFields = document.getElementById('footerFields');
+
+  DATA.forEach(function(cat, idx){
+    var num = String(idx + 1).padStart(2, '0');
+
+    var section = document.createElement('section');
+    section.className = 'category';
+    section.id = cat.id;
+
+    var head = document.createElement('div');
+    head.className = 'category-head';
+    head.innerHTML =
+      '<span class="category-num">' + num + '</span>' +
+      '<h2>' + cat.title + '</h2>' +
+      '<p class="category-lede">' + cat.lede + '</p>';
+    section.appendChild(head);
+
+    var grid = document.createElement('div');
+    grid.className = 'term-grid';
+    cat.terms.forEach(function(term){
+      var card = document.createElement('article');
+      card.className = 'term-card';
+      card.dataset.search = (term[0] + ' ' + term[1]).toLowerCase();
+      card.innerHTML = '<h3>' + term[0] + '</h3><p>' + term[1] + '</p>';
+      grid.appendChild(card);
+    });
+    section.appendChild(grid);
+    atlas.appendChild(section);
+
+    var chip = document.createElement('button');
+    chip.className = 'chip';
+    chip.type = 'button';
+    chip.textContent = cat.title;
+    chip.addEventListener('click', function(){
+      document.getElementById(cat.id).scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
+    });
+    chipNav.appendChild(chip);
+
+    var fli = document.createElement('li');
+    var fla = document.createElement('a');
+    fla.href = '#' + cat.id;
+    fla.textContent = cat.title;
+    fli.appendChild(fla);
+    footerFields.appendChild(fli);
+  });
+
+  var chips = Array.prototype.slice.call(chipNav.children);
+
+  /* ---------------- Active chip on scroll ---------------- */
+  var sections = DATA.map(function(c){ return document.getElementById(c.id); });
+  if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        if (entry.isIntersecting) {
+          var idx = sections.indexOf(entry.target);
+          chips.forEach(function(c, i){ c.classList.toggle('active', i === idx); });
+        }
+      });
+    }, { rootMargin: '-40% 0px -55% 0px' });
+    sections.forEach(function(s){ io.observe(s); });
+  }
+
+  /* ---------------- Search / filter ---------------- */
+  var searchInput = document.getElementById('search');
+  var resultNote = document.getElementById('resultNote');
+  var allCards = Array.prototype.slice.call(document.querySelectorAll('.term-card'));
+
+  function escapeRegExp(s){ return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+
+  function runFilter(){
+    var q = searchInput.value.trim().toLowerCase();
+    var visible = 0;
+
+    allCards.forEach(function(card){
+      var match = !q || card.dataset.search.indexOf(q) !== -1;
+      card.hidden = !match;
+      if (match) {
+        visible++;
+        var h3 = card.querySelector('h3');
+        var p = card.querySelector('p');
+        if (q) {
+          var re = new RegExp('(' + escapeRegExp(q) + ')', 'ig');
+          h3.innerHTML = h3.textContent.replace(re, '<mark>$1</mark>');
+          p.innerHTML = p.textContent.replace(re, '<mark>$1</mark>');
+        } else {
+          h3.innerHTML = h3.textContent;
+          p.innerHTML = p.textContent;
+        }
+      }
+    });
+
+    DATA.forEach(function(cat){
+      var section = document.getElementById(cat.id);
+      var anyVisible = Array.prototype.slice.call(section.querySelectorAll('.term-card')).some(function(c){ return !c.hidden; });
+      section.hidden = !anyVisible;
+    });
+
+    resultNote.innerHTML = q
+      ? 'Showing <b>' + visible + '</b> of ' + TOTAL + ' terms for "<b>' + searchInput.value.trim() + '</b>"'
+      : '';
+  }
+
+  searchInput.addEventListener('input', runFilter);
+
+  /* ---------------- Tokenizer demo ---------------- */
+  var tokenInput = document.getElementById('tokenInput');
+  var tokenOutput = document.getElementById('tokenOutput');
+  var tokenCount = document.getElementById('tokenCount');
+  var tokenHues = ['var(--accent-soft)', '#7fe0c433', '#f2879f2e', '#8ba4f033'];
+  var tokenTextHues = ['var(--accent-strong)', 'var(--mint)', 'var(--rose)', 'var(--periwinkle)'];
+
+  function renderTokens(){
+    var text = tokenInput.value;
+    var parts = text.match(/[A-Za-z]+(?:'[A-Za-z]+)?|[0-9]+|[^\sA-Za-z0-9]/g) || [];
+    tokenOutput.innerHTML = '';
+    parts.forEach(function(part, i){
+      var span = document.createElement('span');
+      span.className = 'token';
+      span.textContent = part;
+      span.style.background = tokenHues[i % tokenHues.length];
+      span.style.color = tokenTextHues[i % tokenTextHues.length];
+      tokenOutput.appendChild(span);
+    });
+    tokenCount.innerHTML = 'Split into <b>' + parts.length + '</b> tokens from ' + text.split(/\s+/).filter(Boolean).length + ' words.';
+  }
+  tokenInput.addEventListener('input', renderTokens);
+  renderTokens();
+
+  /* ---------------- Ambient node graph ---------------- */
+  var canvas = document.getElementById('graph');
+  var ctx = canvas.getContext('2d');
+  var nodes = [];
+  var W, H, DPR;
+
+  function resize(){
+    var rect = canvas.parentElement.getBoundingClientRect();
+    DPR = Math.min(window.devicePixelRatio || 1, 2);
+    W = rect.width; H = rect.height;
+    canvas.width = W * DPR;
+    canvas.height = H * DPR;
+    canvas.style.width = W + 'px';
+    canvas.style.height = H + 'px';
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+
+    var count = Math.max(26, Math.min(52, Math.floor(W / 26)));
+    nodes = [];
+    for (var i = 0; i < count; i++) {
+      nodes.push({
+        x: Math.random() * W,
+        y: Math.random() * H,
+        vx: (Math.random() - 0.5) * 0.12,
+        vy: (Math.random() - 0.5) * 0.12,
+        r: 1.1 + Math.random() * 1.6
+      });
+    }
+  }
+
+  function drawFrame(){
+    ctx.clearRect(0, 0, W, H);
+    var linkDist = Math.min(140, W / 6);
+
+    for (var i = 0; i < nodes.length; i++) {
+      for (var j = i + 1; j < nodes.length; j++) {
+        var a = nodes[i], b = nodes[j];
+        var dx = a.x - b.x, dy = a.y - b.y;
+        var d = Math.sqrt(dx * dx + dy * dy);
+        if (d < linkDist) {
+          ctx.strokeStyle = 'rgba(255,157,82,' + (0.12 * (1 - d / linkDist)) + ')';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(a.x, a.y);
+          ctx.lineTo(b.x, b.y);
+          ctx.stroke();
+        }
+      }
+    }
+    nodes.forEach(function(n){
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(238,241,247,0.55)';
+      ctx.fill();
+    });
+  }
+
+  function step(){
+    nodes.forEach(function(n){
+      n.x += n.vx; n.y += n.vy;
+      if (n.x < 0 || n.x > W) n.vx *= -1;
+      if (n.y < 0 || n.y > H) n.vy *= -1;
+    });
+    drawFrame();
+    if (!reduceMotion) requestAnimationFrame(step);
+  }
+
+  resize();
+  drawFrame();
+  if (!reduceMotion) requestAnimationFrame(step);
+  window.addEventListener('resize', function(){ resize(); drawFrame(); });
+
+})();
+</script>
+</body>
+</html>
