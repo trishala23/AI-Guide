@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="An interactive field guide to the AI concepts shaping today — from neural networks to autonomous agents — with live search and a token-splitting demo.">
+<meta name="description" content="An interactive field guide to the AI concepts shaping today — from neural networks to autonomous agents — with live search, a token-splitting demo, and a working flow diagram for every field.">
 <title>Latent Atlas</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -30,6 +30,7 @@
   }
 
   *{ box-sizing:border-box; }
+  [hidden]{ display:none !important; }
   html{ color-scheme: dark; }
   body{
     margin:0;
@@ -164,9 +165,15 @@
   .chip:hover{ border-color:var(--accent); color:var(--text); }
   .chip.active{ border-color:var(--accent); color:var(--accent-strong); background:var(--accent-soft); }
 
+  .hint{
+    font-family:var(--font-mono); font-size:.72rem; color:var(--text-faint);
+    text-align:center; padding:14px 24px 0; max-width:1120px; margin:0 auto;
+  }
+  .hint b{ color:var(--accent-strong); font-weight:500; }
+
   .result-note{
     font-family:var(--font-mono); font-size:.72rem; color:var(--text-faint);
-    text-align:center; padding:16px 24px 0; max-width:1120px; margin:0 auto;
+    text-align:center; padding:8px 24px 0; max-width:1120px; margin:0 auto;
   }
   .result-note b{ color:var(--accent-strong); font-weight:500; }
 
@@ -175,15 +182,35 @@
   .category{ padding:52px 0 8px; border-top:1px solid var(--border-soft); }
   .category:first-child{ border-top:none; }
   .category-head{
-    display:grid; grid-template-columns:auto 1fr; gap:6px 18px; align-items:baseline;
+    display:grid; grid-template-columns:auto 1fr; gap:6px 18px; align-items:start;
     margin-bottom:22px;
   }
   .category-num{
     font-family:var(--font-mono); font-size:.8rem; color:var(--text-faint);
-    grid-row:1 / 3;
+    padding-top:5px;
+  }
+  .category-title-row{
+    grid-column:2;
+    display:flex; align-items:center; justify-content:space-between;
+    gap:16px; flex-wrap:wrap;
   }
   .category-head h2{ font-size:1.55rem; }
   .category-lede{ grid-column:2; color:var(--text-dim); font-size:.94rem; max-width:62ch; }
+
+  .flow-btn{
+    display:inline-flex; align-items:center; gap:6px; flex:0 0 auto;
+    font-family:var(--font-mono); font-size:.72rem; white-space:nowrap;
+    color:var(--accent-strong);
+    background:transparent;
+    border:1px solid var(--border);
+    padding:7px 13px;
+    border-radius:100px;
+    cursor:pointer;
+    transition:border-color .15s ease, background .15s ease;
+  }
+  .flow-btn:hover{ border-color:var(--accent); background:var(--accent-soft); }
+  .flow-btn svg{ transition:transform .15s ease; }
+  .flow-btn:hover svg{ transform:translateX(2px); }
 
   .term-grid{
     display:grid;
@@ -263,6 +290,69 @@
   }
   .token-count b{ color:var(--accent-strong); }
 
+  /* ---------- Flow modal ---------- */
+  .modal-overlay{
+    position:fixed; inset:0; z-index:100;
+    display:flex; align-items:flex-start; justify-content:center;
+    padding:6vh 20px;
+    background:rgba(6,8,12,.72);
+    backdrop-filter:blur(6px);
+    overflow-y:auto;
+  }
+  .modal{
+    position:relative;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:14px;
+    max-width:600px; width:100%;
+    padding:32px 32px 30px;
+    box-shadow:0 24px 60px rgba(0,0,0,.5);
+  }
+  .modal-close{
+    position:absolute; top:16px; right:16px;
+    width:32px; height:32px;
+    display:flex; align-items:center; justify-content:center;
+    background:var(--surface-2);
+    border:1px solid var(--border);
+    border-radius:50%;
+    color:var(--text-dim);
+    font-size:.95rem; line-height:1;
+    cursor:pointer;
+  }
+  .modal-close:hover{ color:var(--text); border-color:var(--accent); }
+  .modal-eyebrow{
+    font-family:var(--font-mono); font-size:.72rem; letter-spacing:.12em;
+    text-transform:uppercase; color:var(--accent-strong); margin-bottom:8px;
+  }
+  .modal h2{ font-size:1.5rem; padding-right:36px; }
+
+  .flow-figure{ margin:22px 0 0; }
+  .flow-figure svg{ display:block; width:100%; height:auto; }
+  .flow-figure figcaption{
+    margin-top:10px; font-family:var(--font-mono); font-size:.76rem; color:var(--text-faint);
+  }
+  .flow-node rect{ fill:var(--surface-2); stroke:var(--border); stroke-width:1; }
+  .flow-node-label{ font-family:var(--font-mono); font-size:12px; fill:var(--text); }
+  .flow-edge{ stroke:var(--accent); stroke-width:1.5; fill:none; }
+  .flow-edge-label{ font-family:var(--font-mono); font-size:10.5px; fill:var(--text-faint); }
+  .flow-arrowhead{ fill:var(--accent); }
+
+  .loop-note{
+    margin-top:16px;
+    font-family:var(--font-mono); font-size:.78rem; color:var(--accent-strong);
+    background:var(--accent-soft);
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:10px 14px;
+  }
+  .flow-steps{
+    margin:20px 0 0; padding-left:1.3em;
+    display:flex; flex-direction:column; gap:9px;
+  }
+  .flow-steps li{ font-size:.86rem; color:var(--text-dim); line-height:1.5; }
+  .flow-steps li::marker{ color:var(--accent-strong); font-family:var(--font-mono); font-size:.78em; }
+  .flow-steps b{ color:var(--text); font-weight:500; }
+
   /* ---------- Footer ---------- */
   footer{
     border-top:1px solid var(--border-soft);
@@ -286,7 +376,7 @@
   }
 
   @media (prefers-reduced-motion: reduce){
-    .term-card, .chip{ transition:none; }
+    .term-card, .chip, .flow-btn, .flow-btn svg{ transition:none; }
     .cursor{ animation:none; opacity:1; }
   }
 
@@ -294,8 +384,9 @@
     .hero{ padding:64px 18px 40px; }
     .stats{ max-width:100%; }
     .category-head{ grid-template-columns:1fr; }
-    .category-num{ grid-row:auto; }
+    .category-title-row{ grid-column:1; }
     .category-lede{ grid-column:1; }
+    .modal{ padding:26px 20px 24px; }
   }
 </style>
 </head>
@@ -321,6 +412,7 @@
     <nav class="chips" id="chipNav" aria-label="Jump to field"></nav>
   </div>
 </div>
+<p class="hint">Click <b>View flow</b> on any field to see how it actually works, step by step.</p>
 <p class="result-note" id="resultNote"></p>
 
 <main id="atlas"></main>
@@ -360,6 +452,20 @@
   <p class="colophon">Latent Atlas · charted for AI-Guide</p>
 </footer>
 
+<div class="modal-overlay" id="modalOverlay" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <button class="modal-close" id="modalClose" type="button" aria-label="Close">✕</button>
+    <p class="modal-eyebrow">Working flow</p>
+    <h2 id="modalTitle"></h2>
+    <figure class="flow-figure">
+      <div id="modalSvgWrap"></div>
+      <figcaption id="modalCaption"></figcaption>
+    </figure>
+    <p class="loop-note" id="modalLoop" hidden></p>
+    <ol class="flow-steps" id="modalStepsList"></ol>
+  </div>
+</div>
+
 <script>
 (function(){
   "use strict";
@@ -373,7 +479,17 @@
       ['Machine Learning (ML)', 'A subset of AI where systems learn patterns from data instead of following hand-written rules.'],
       ['Deep Learning (DL)', 'A subset of ML that uses multi-layered neural networks to learn complex, hierarchical patterns.'],
       ['Generative AI (GenAI)', 'A subset of deep learning focused on generating new content — text, images, audio, code — rather than only making predictions.']
-    ]},
+    ], flow:{
+      nodes:['Artificial Intelligence','Machine Learning','Deep Learning','Generative AI'],
+      edges:['narrows to','narrows to','narrows to'],
+      desc:[
+        'The entire field: any system that performs tasks requiring human-like intelligence.',
+        'Systems that learn patterns from data instead of following hard-coded rules.',
+        'Multi-layered neural networks that learn complex, hierarchical patterns.',
+        'Networks trained to generate new content rather than only classify or predict.'
+      ],
+      loop:null
+    }},
     { id:'machine-learning', title:'Machine Learning', lede:'The paradigms models are trained under, and the vocabulary for judging whether training worked.', terms:[
       ['Supervised Learning', 'Learns from labeled input–output pairs, e.g. spam detection or price prediction.'],
       ['Unsupervised Learning', 'Finds structure in unlabeled data, e.g. customer segmentation or clustering.'],
@@ -383,7 +499,19 @@
       ['Overfitting / Underfitting', 'A model that memorizes training data instead of generalizing overfits; one too simple to capture the pattern underfits.'],
       ['Gradient Descent', 'The optimization algorithm that nudges a model’s parameters to minimize its loss, step by step.'],
       ['Loss Function', 'The function that measures how far a model’s predictions are from the truth — what gradient descent minimizes.']
-    ]},
+    ], flow:{
+      nodes:['Collect data','Split data','Train model','Compute loss','Update weights','Evaluate'],
+      edges:['partitions','fits','scores error','backprop','test on unseen data'],
+      desc:[
+        'Gather examples paired with the outcome you want the model to predict.',
+        'Divide into training, validation, and test sets.',
+        'The model makes a prediction from the training data.',
+        'A loss function measures how wrong that prediction was.',
+        'Gradient descent nudges every parameter to lower the loss.',
+        'Test on unseen data to confirm it generalized, not memorized.'
+      ],
+      loop:'Train model → Compute loss → Update weights repeats every batch until the loss stops improving.'
+    }},
     { id:'deep-learning', title:'Deep Learning', lede:'Neural networks, and the transformer architecture underneath nearly every modern model.', terms:[
       ['Neural Network', 'Layers of connected artificial neurons — input, hidden, output — that learn representations of data through weighted connections.'],
       ['Backpropagation', 'The algorithm that computes how much each weight contributed to a prediction’s error, so it can be corrected.'],
@@ -392,7 +520,20 @@
       ['Attention Mechanism', 'Lets a model weigh how much every other part of the input matters when producing each part of the output.'],
       ['Embeddings', 'Dense numeric vectors that place words, sentences, or images in a space where distance encodes meaning.'],
       ['CNN', 'Convolutional networks specialized for grid-like data such as images.']
-    ]},
+    ], flow:{
+      nodes:['Input','Forward pass','Attention','Output','Loss','Backprop','Update weights'],
+      edges:['encodes','weighs tokens','predicts','compares to truth','assigns blame','nudges'],
+      desc:[
+        'Raw data enters as numbers — pixels, token IDs, audio samples.',
+        'Each layer multiplies by learned weights and applies an activation function.',
+        'In a transformer, every token looks at every other token to decide what matters.',
+        'The final layer produces a prediction — a class, a value, a next token.',
+        'Compare the prediction to the true answer.',
+        'Compute how much each weight contributed to that error.',
+        'Every weight shifts slightly to reduce the error next time.'
+      ],
+      loop:'The whole pass repeats for every training example, layer by layer.'
+    }},
     { id:'nlp', title:'Natural Language Processing', lede:'The older discipline of getting computers to read and produce human language.', terms:[
       ['Tokenization', 'Splitting text into the smaller units — words, subwords, or characters — a model actually processes.'],
       ['Word Embeddings', 'Vector representations of words (Word2Vec, GloVe) that capture semantic similarity.'],
@@ -400,7 +541,19 @@
       ['Sentiment Analysis', 'Determining the emotional tone — positive, negative, neutral — of a piece of text.'],
       ['Machine Translation', 'Automatically translating text from one language to another.'],
       ['Text Summarization', 'Condensing a document while preserving its key meaning.']
-    ]},
+    ], flow:{
+      nodes:['Raw text','Tokenize','Embed','Model','Task head','Output'],
+      edges:['splits','vectorizes','processes sequence','specializes','labels or text'],
+      desc:[
+        'A sentence, document, or conversation.',
+        'Split into words, subwords, or characters.',
+        'Convert each token into a vector that encodes meaning.',
+        'A trained network processes the sequence of vectors.',
+        'A small output layer specializes the result — tags, sentiment, translation, summary.',
+        'Structured text or labels a downstream system can use.'
+      ],
+      loop:null
+    }},
     { id:'llms', title:'Large Language Models', lede:'The transformer-based giants — Claude among them — trained on internet-scale, increasingly multimodal data.', terms:[
       ['Pretraining', 'Training a model on huge volumes of raw data, usually by having it predict the next token, to learn general language patterns.'],
       ['Context Window', 'The maximum amount of text, measured in tokens, a model can consider at once.'],
@@ -410,40 +563,114 @@
       ['Multimodal Models', 'Models that read or generate more than one data type — text, images, audio, video — in the same conversation.'],
       ['Chain-of-Thought', 'Prompting a model to reason through intermediate steps before answering, which improves accuracy on hard problems.'],
       ['Extended Thinking', 'A dedicated reasoning phase before the final answer, as in Claude’s extended thinking mode.']
-    ]},
+    ], flow:{
+      nodes:['Pretrain','Align','Prompt arrives','Tokenize','Generate','Sample','Stream tokens'],
+      edges:['tune with feedback','sent by user','packs context','predicts next token','picks a token','emits'],
+      desc:[
+        'The model reads massive text, learning to predict the next token, over and over.',
+        'Instruction tuning and RLHF shape it to follow instructions and prefer safe answers.',
+        'A user sends text, optionally with a system prompt and conversation history.',
+        'The prompt is split into tokens and packed into the context window.',
+        'The model predicts a probability distribution over the next token.',
+        'Temperature controls how boldly it picks from that distribution.',
+        'Tokens are emitted one by one until a stop condition is reached.'
+      ],
+      loop:'Generate → Sample repeats once per output token, each new token feeding back into the context.'
+    }},
     { id:'genai', title:'Generative AI', lede:'Models that create rather than classify.', terms:[
       ['Text Generation', 'An LLM producing prose, code, or summaries token by token.'],
       ['Diffusion Models', 'Generate images by starting from noise and gradually removing it, guided by a prompt.'],
       ['GANs', 'Two competing networks — a generator and a discriminator — that push each other toward more realistic output.'],
       ['Voice Generation', 'Text-to-speech and voice-cloning models that synthesize spoken audio.'],
       ['Code Generation', 'Models trained to write, explain, and debug code, such as Claude Code or GitHub Copilot.']
-    ]},
+    ], flow:{
+      nodes:['Prompt','Encode','Start from noise','Refine','Decode','Output'],
+      edges:['embeds','initializes','denoises iteratively','converts','renders'],
+      desc:[
+        'A text description of the desired output.',
+        'The prompt becomes an embedding the model conditions on.',
+        'Generation begins from random static (image) or an empty sequence (text/audio).',
+        'The model repeatedly removes noise or predicts the next unit, guided by the prompt.',
+        'The final latent representation becomes pixels, a waveform, or text.',
+        'A new image, sound, or passage that never existed before.'
+      ],
+      loop:'Refine repeats tens to hundreds of times, each pass sharpening the result.'
+    }},
     { id:'vision', title:'Computer Vision', lede:'Teaching models to see.', terms:[
       ['Image Classification', 'Assigning a single label to an entire image.'],
       ['Object Detection', 'Locating and labeling multiple distinct objects within one image.'],
       ['Image Segmentation', 'Labeling every pixel of an image by which object it belongs to.'],
       ['OCR', 'Optical character recognition — extracting text from an image.'],
       ['Vision Transformers', 'Transformers applied to image patches instead of the pixels a CNN would scan.']
-    ]},
+    ], flow:{
+      nodes:['Image','Scan patches','Extract features','Task head','Output'],
+      edges:['filters or splits','abstracts layer by layer','specializes'],
+      desc:[
+        'Raw pixel grid enters the model.',
+        'A CNN slides filters over regions, or a ViT splits the image into patches.',
+        'Layers learn edges, then shapes, then whole objects.',
+        'The same features feed a classifier, a detector, a segmenter, or an OCR decoder.',
+        'A label, bounding boxes, a pixel mask, or extracted text.'
+      ],
+      loop:null
+    }},
     { id:'rag', title:'Retrieval-Augmented Generation', lede:'Grounding an LLM in an external knowledge source, so it can answer from documents it never trained on.', terms:[
       ['Vector Database', 'Stores embeddings and finds the ones most similar to a query in milliseconds — e.g. Pinecone, Weaviate, pgvector.'],
       ['Chunking', 'Splitting a document into smaller pieces before embedding, so retrieval returns focused, relevant passages.'],
       ['Semantic Search', 'Finding results by meaning rather than exact keyword match.'],
       ['Grounding', 'Anchoring a model’s answer to retrieved, verifiable source material to cut down on hallucination.']
-    ]},
+    ], flow:{
+      nodes:['Ingest docs','Chunk','Embed & store','User query','Embed query','Semantic search','Augment prompt','Grounded answer'],
+      edges:['splits into passages','vectorizes','arrives','vectorizes','retrieves top matches','inserts as context','generates'],
+      desc:[
+        'Source material — docs, PDFs, wikis — is collected.',
+        'Each document is split into smaller, focused passages.',
+        'Every chunk is converted to a vector and saved in a vector database.',
+        'A new question arrives.',
+        'The same embedding model encodes the question.',
+        'The vector database returns the most similar chunks.',
+        'Retrieved chunks are inserted into the LLM’s context alongside the question.',
+        'The LLM generates a response anchored to the retrieved material.'
+      ],
+      loop:null
+    }},
     { id:'prompting', title:'Prompt Engineering', lede:'Crafting the input to reliably shape the output.', terms:[
       ['Zero-shot Prompting', 'Asking a model to do a task with no examples given.'],
       ['Few-shot Prompting', 'Giving a handful of examples in the prompt to steer format and behavior.'],
       ['System Prompt', 'The standing instructions that set a model’s role, tone, and constraints for a whole conversation.'],
       ['Prompt Injection', 'A security risk where text embedded in the input tries to override the model’s real instructions.']
-    ]},
+    ], flow:{
+      nodes:['Define intent','System prompt','Few-shot examples','Chain-of-thought','Send prompt','Evaluate output'],
+      edges:['sets role & tone','shows the pattern','asks it to reason','generates a response','check & refine'],
+      desc:[
+        'Decide exactly what output you need and in what format.',
+        'Establish the model’s role, tone, and constraints for the conversation.',
+        'Optional: show the pattern to follow with a few worked examples.',
+        'Optional: ask the model to reason step by step before answering.',
+        'The LLM generates a response following those constraints.',
+        'Check the output, then adjust the prompt and try again.'
+      ],
+      loop:'Evaluate output feeds back into the earlier steps until the output is reliable.'
+    }},
     { id:'fine-tuning', title:'Fine-Tuning & Adaptation', lede:'Ways to specialize a general model for a narrower job.', terms:[
       ['Fine-Tuning', 'Continuing to train a pretrained model on a smaller, task-specific dataset.'],
       ['Instruction Tuning', 'Fine-tuning a model specifically to follow natural-language instructions better.'],
       ['RLHF', 'Reinforcement learning from human feedback — using human preference ratings to align model behavior.'],
       ['LoRA / PEFT', 'Parameter-efficient fine-tuning that trains a small set of added parameters instead of the whole model.'],
       ['Distillation', 'Training a smaller "student" model to mimic a larger "teacher" model’s outputs.']
-    ]},
+    ], flow:{
+      nodes:['Pretrained model','Task dataset','Choose method','Train','Evaluate','Distill (optional)'],
+      edges:['assemble examples','LoRA, full, or RLHF','fits weights','checks generalization','shrinks for deployment'],
+      desc:[
+        'Start with a model already fluent in general language.',
+        'Assemble examples specific to the behavior you want.',
+        'Full fine-tuning, LoRA/PEFT (a small added adapter), or RLHF on preference data.',
+        'The model’s weights update to fit the new examples.',
+        'Check it improved on the target task without forgetting general ability.',
+        'Train a smaller student model to mimic this one, for cheaper deployment.'
+      ],
+      loop:null
+    }},
     { id:'agents', title:'AI Agents', lede:'Systems that plan, use tools, and take multi-step action toward a goal instead of answering once.', terms:[
       ['Agentic Loop', 'The cycle of reasoning, choosing a tool, observing the result, and deciding the next step — repeated until the task is done.'],
       ['Tool Use / Function Calling', 'An LLM’s ability to call external functions or APIs: search the web, run code, query a database.'],
@@ -451,31 +678,93 @@
       ['Memory', 'Short-term conversation context versus long-term knowledge an agent keeps across sessions.'],
       ['Multi-Agent Systems', 'Several specialized agents collaborating — a researcher agent handing off to a writer agent.'],
       ['Orchestration', 'Coordinating multiple tools, agents, or steps into one larger workflow.']
-    ]},
+    ], flow:{
+      nodes:['Goal','Plan','Choose tool','Act','Observe','Update memory','Respond'],
+      edges:['breaks down','selects','executes','reads result','keeps context','delivers result'],
+      desc:[
+        'The user states what they want accomplished.',
+        'The agent breaks the goal into smaller steps.',
+        'It decides which function, API, or search to call next.',
+        'The tool actually runs — a search, some code, a database query.',
+        'The agent reads the tool’s result.',
+        'Relevant findings are kept in context for later steps.',
+        'Once the goal is met, the agent delivers the final result.'
+      ],
+      loop:'Choose tool → Act → Observe repeats until the agent decides the goal is achieved.'
+    }},
     { id:'mcp', title:'MCP & Tool Use', lede:'An open standard for wiring models up to the outside world.', terms:[
       ['MCP Server', 'Exposes tools, data, or resources that an AI client can call — a file system, a database, an API.'],
       ['MCP Client', 'The AI application, such as Claude Code, that connects to MCP servers to extend what it can do.'],
       ['Tool Schema', 'A structured description of a tool’s name, purpose, and parameters, so a model can call it correctly.']
-    ]},
+    ], flow:{
+      nodes:['AI client','MCP client','MCP server','Tool call','External system','Result returns'],
+      edges:['speaks protocol','exposes schema','fills parameters','executes action','flows back'],
+      desc:[
+        'An app like Claude Code needs a capability it doesn’t have built in.',
+        'It speaks the Model Context Protocol to discover what’s available.',
+        'The server exposes a tool schema describing a function’s name, purpose, and parameters.',
+        'The model picks a tool and fills in its parameters.',
+        'The server executes the real action — read a file, query a database, call an API.',
+        'The output flows back through the MCP server into the model’s next step.'
+      ],
+      loop:null
+    }},
     { id:'evaluation', title:'Evaluation & Benchmarking', lede:'How anyone claims one model is actually better than another.', terms:[
       ['Benchmark', 'A standardized test set for comparing models — MMLU, HumanEval, GSM8K among them.'],
       ['Precision / Recall / F1', 'Metrics for classification quality: how many predicted positives were right, how many real positives were caught, and their balance.'],
       ['Perplexity', 'A measure of how well a language model predicts text — lower is better.'],
       ['LLM-as-a-Judge', 'Using one model to score the outputs of another, in place of — or alongside — human review.']
-    ]},
+    ], flow:{
+      nodes:['Pick benchmark','Run model','Compare to truth','Score','Aggregate','Rank models'],
+      edges:['generates outputs','metrics or judge model','per example','totals results','compares'],
+      desc:[
+        'A standardized set (MMLU, HumanEval) or your own task-specific test cases.',
+        'Generate outputs for every test case.',
+        'Compute precision, recall, F1, or perplexity — or ask an LLM-as-judge.',
+        'Each output earns a score against the reference.',
+        'Combine per-example results into one overall number.',
+        'Compare candidates, or track a model’s score release over release.'
+      ],
+      loop:null
+    }},
     { id:'safety', title:'Responsible AI & Safety', lede:'Keeping powerful systems aligned with what people actually want.', terms:[
       ['Alignment', 'Making sure a model’s goals and behavior match human values and intent.'],
       ['Bias', 'Systematic unfairness in outputs, usually inherited from training data.'],
       ['Interpretability', 'Understanding why a model produced a particular output, not just that it did.'],
       ['Guardrails', 'Rules, filters, or systems that constrain a model’s behavior to prevent harmful output.'],
       ['Red Teaming', 'Deliberately probing a model for weaknesses or harmful behavior before it ships.']
-    ]},
+    ], flow:{
+      nodes:['Train with feedback','Audit for bias','Red team','Add guardrails','Check interpretability','Monitor in production'],
+      edges:['then','then','then','then','feeds back'],
+      desc:[
+        'RLHF nudges the base model toward helpful, honest, harmless behavior.',
+        'Test outputs across groups and contexts for systematic unfairness.',
+        'Deliberately try to provoke harmful or incorrect behavior before anyone else does.',
+        'Filters and rules catch what training alone didn’t.',
+        'Where possible, inspect why the model made a given decision.',
+        'Real-world usage is reviewed, feeding issues back into the next round of training.'
+      ],
+      loop:'Monitor in production feeds back into Train with feedback for the next model iteration.'
+    }},
     { id:'mlops', title:'MLOps & Deployment', lede:'Running a trained model in the real world, at cost and at scale.', terms:[
       ['Inference', 'Running a trained model to produce an output, as opposed to training it.'],
       ['Latency & Throughput', 'How long one response takes to return, and how many requests the system can handle at once.'],
       ['Quantization', 'Reducing a model’s numeric precision to shrink its size and speed up inference with little accuracy loss.'],
       ['Prompt Caching', 'Reusing previously computed context so repeated prompts cost less and return faster.']
-    ]}
+    ], flow:{
+      nodes:['Package model','Quantize','Deploy','Request arrives','Check cache','Run inference','Monitor & scale'],
+      edges:['shrinks precision','hosts behind API','sent by user','reuse if seen','computes response','tracks load'],
+      desc:[
+        'Export trained weights in a servable format.',
+        'Optional: reduce numeric precision to shrink size and speed up inference.',
+        'The model is hosted behind an API endpoint.',
+        'A user or application sends an inference request.',
+        'If this context was seen recently, reuse the cached computation.',
+        'The model computes and returns a response.',
+        'Track latency and throughput; scale serving capacity to match demand.'
+      ],
+      loop:null
+    }}
   ];
 
   var TOTAL = DATA.reduce(function(n, c){ return n + c.terms.length; }, 0);
@@ -484,7 +773,7 @@
   document.getElementById('stats').innerHTML =
     '<div class="stat"><b>' + TOTAL + '</b><span>Terms</span></div>' +
     '<div class="stat"><b>' + DATA.length + '</b><span>Fields</span></div>' +
-    '<div class="stat"><b>1</b><span>Map</span></div>';
+    '<div class="stat"><b>' + DATA.length + '</b><span>Flow diagrams</span></div>';
 
   var TAGLINE = 'Charting the concepts behind machine learning, generative AI, and the agents built on top of them.';
   var taglineEl = document.getElementById('tagline');
@@ -518,9 +807,15 @@
     head.className = 'category-head';
     head.innerHTML =
       '<span class="category-num">' + num + '</span>' +
-      '<h2>' + cat.title + '</h2>' +
+      '<div class="category-title-row">' +
+        '<h2>' + cat.title + '</h2>' +
+        '<button class="flow-btn" type="button">View flow' +
+          '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>' +
+        '</button>' +
+      '</div>' +
       '<p class="category-lede">' + cat.lede + '</p>';
     section.appendChild(head);
+    head.querySelector('.flow-btn').addEventListener('click', function(){ openFlowModal(cat); });
 
     var grid = document.createElement('div');
     grid.className = 'term-grid';
@@ -632,6 +927,80 @@
   }
   tokenInput.addEventListener('input', renderTokens);
   renderTokens();
+
+  /* ---------------- Flow diagrams ---------------- */
+  function escapeXml(s){
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  function buildFlowSVG(flow){
+    var W = 560, nodeW = 340, nodeH = 40, rowGap = 54, topPad = 24, bottomPad = 24;
+    var n = flow.nodes.length;
+    var H = topPad + bottomPad + n * nodeH + (n - 1) * rowGap;
+    var cx = W / 2;
+    var ariaLabel = 'Flow diagram: ' + flow.nodes.join(' → ');
+    var parts = [];
+    parts.push('<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + escapeXml(ariaLabel) + '">');
+    parts.push('<defs><marker id="flowArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" class="flow-arrowhead"/></marker></defs>');
+    for (var i = 0; i < n; i++) {
+      var y = topPad + i * (nodeH + rowGap);
+      if (i > 0) {
+        var prevBottom = topPad + (i - 1) * (nodeH + rowGap) + nodeH;
+        var midY = (prevBottom + y) / 2;
+        parts.push('<line x1="' + cx + '" y1="' + prevBottom + '" x2="' + cx + '" y2="' + (y - 2) + '" class="flow-edge" marker-end="url(#flowArrow)"/>');
+        parts.push('<text x="' + (cx + 12) + '" y="' + (midY + 4) + '" class="flow-edge-label">' + escapeXml(flow.edges[i - 1]) + '</text>');
+      }
+      parts.push('<g class="flow-node">');
+      parts.push('<rect x="' + (cx - nodeW / 2) + '" y="' + y + '" width="' + nodeW + '" height="' + nodeH + '" rx="8"/>');
+      parts.push('<text x="' + cx + '" y="' + (y + nodeH / 2 + 4) + '" text-anchor="middle" class="flow-node-label">' + escapeXml(flow.nodes[i]) + '</text>');
+      parts.push('</g>');
+    }
+    parts.push('</svg>');
+    return parts.join('');
+  }
+
+  var modalOverlay = document.getElementById('modalOverlay');
+  var modalTitle = document.getElementById('modalTitle');
+  var modalSvgWrap = document.getElementById('modalSvgWrap');
+  var modalCaption = document.getElementById('modalCaption');
+  var modalLoop = document.getElementById('modalLoop');
+  var modalStepsList = document.getElementById('modalStepsList');
+  var modalClose = document.getElementById('modalClose');
+  var lastFocused = null;
+
+  function openFlowModal(cat){
+    var flow = cat.flow;
+    lastFocused = document.activeElement;
+    modalTitle.textContent = cat.title;
+    modalSvgWrap.innerHTML = buildFlowSVG(flow);
+    modalCaption.textContent = 'How ' + cat.title + ' works, from ' + flow.nodes[0].toLowerCase() + ' to ' + flow.nodes[flow.nodes.length - 1].toLowerCase() + '.';
+    modalStepsList.innerHTML = flow.nodes.map(function(node, i){
+      return '<li><b>' + node + '</b> — ' + flow.desc[i] + '</li>';
+    }).join('');
+    if (flow.loop) {
+      modalLoop.textContent = '↻ ' + flow.loop;
+      modalLoop.hidden = false;
+    } else {
+      modalLoop.hidden = true;
+    }
+    modalOverlay.hidden = false;
+    document.body.style.overflow = 'hidden';
+    modalClose.focus();
+  }
+
+  function closeFlowModal(){
+    modalOverlay.hidden = true;
+    document.body.style.overflow = '';
+    if (lastFocused && lastFocused.focus) lastFocused.focus();
+  }
+
+  modalClose.addEventListener('click', closeFlowModal);
+  modalOverlay.addEventListener('click', function(e){
+    if (e.target === modalOverlay) closeFlowModal();
+  });
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape' && !modalOverlay.hidden) closeFlowModal();
+  });
 
   /* ---------------- Ambient node graph ---------------- */
   var canvas = document.getElementById('graph');
