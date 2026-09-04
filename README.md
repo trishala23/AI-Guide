@@ -4,6 +4,9 @@ A beginner-friendly guide to the core Artificial Intelligence concepts used
 today — from classic machine learning to modern generative AI, LLMs, and
 AI agents.
 
+**🧭 [Browse the interactive guide — Latent Atlas](https://trishala23.github.io/AI-Guide/)**
+— the same content below, as a searchable, live-tokenizing web page.
+
 ## Table of Contents
 
 1. [Foundations](#1-foundations)
